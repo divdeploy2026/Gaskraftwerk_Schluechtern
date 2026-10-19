@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="de" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f7f3">
+    <title>Social Media – Lebenswertes Schlüchtern</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            color-scheme: light;
+            --page: #f3f6f2;
+            --paper: #fff;
+            --soft: #f7faf7;
+            --ink: #18241d;
+            --muted: #66736a;
+            --line: #dfe7df;
+            --green: #08723e;
+            --green-dark: #07552f;
+            --green-soft: #e8f3eb;
+            --shadow: 0 16px 44px rgba(24, 47, 31, .09);
+        }
+        .dark {
+            color-scheme: dark;
+            --page: #101712;
+            --paper: #17221a;
+            --soft: #1c2a20;
+            --ink: #e7eee8;
+            --muted: #a2b0a5;
+            --line: #2b3b2e;
+            --green: #67c387;
+            --green-dark: #8ed6a6;
+            --green-soft: #20392a;
+            --shadow: 0 16px 44px rgba(0, 0, 0, .23);
+        }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { min-height: 100vh; margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        button, select, textarea { font: inherit; }
+        button, a, select { -webkit-tap-highlight-color: transparent; }
+        button:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid color-mix(in srgb, var(--green) 42%, transparent); outline-offset: 2px; }
+        .topbar { position: sticky; top: 0; z-index: 5; display: flex; min-height: 70px; align-items: center; justify-content: space-between; gap: 16px; padding: 11px clamp(16px, 4vw, 42px); border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(16px); }
+        .brand { display: flex; min-width: 0; align-items: center; gap: 11px; }
+        .brand-mark { display: grid; width: 39px; height: 39px; flex: 0 0 auto; place-items: center; border-radius: 12px; background: var(--green); color: white; }
+        .brand h1 { margin: 0; font-size: 15px; line-height: 1.2; }
+        .brand p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+        .top-actions { display: flex; align-items: center; gap: 8px; }
+        .button, .select, .icon-button { min-height: 39px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); }
+        .button, .icon-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 12px; text-decoration: none; cursor: pointer; transition: background .16s, border-color .16s, transform .16s; }
+        .button:hover, .icon-button:hover, .select:hover { border-color: color-mix(in srgb, var(--green) 50%, var(--line)); background: var(--green-soft); }
+        .button:active, .icon-button:active { transform: translateY(1px); }
+        .button.primary { border-color: var(--green); background: var(--green); color: white; font-weight: 700; }
+        .button.primary:hover { background: var(--green-dark); }
+        .button:disabled { cursor: wait; opacity: .6; }
+        .select { width: min(240px, 35vw); padding: 7px 10px; }
+        .file-input { display: none; }
+        .wrap { width: min(1440px, 100%); margin: 0 auto; padding: 25px clamp(14px, 3vw, 38px) 48px; }
+        .intro { margin: 1px 0 20px; }
+        .eyebrow { margin: 0 0 5px; color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+        .intro h2 { margin: 0; font-size: clamp(24px, 3vw, 34px); line-height: 1.2; letter-spacing: -.025em; }
+        .intro p:last-child { max-width: 740px; margin: 7px 0 0; color: var(--muted); }
+        .status { min-height: 22px; margin: 0 0 13px; color: var(--muted); font-size: 12px; }
+        .status.error { color: #b42318; }
+        .dark .status.error { color: #fda29b; }
+        .layout { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(300px, .92fr); align-items: start; gap: 22px; }
+        .preview-column, .control-column { min-width: 0; }
+        .preview-card, .control-card, .caption-card { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); box-shadow: var(--shadow); }
+        .preview-head, .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 17px; border-bottom: 1px solid var(--line); }
+        .preview-head strong, .card-head h3 { margin: 0; font-size: 13px; font-weight: 750; }
+        .aspect-tag { border-radius: 999px; background: var(--green-soft); color: var(--green); padding: 4px 9px; font-size: 10px; font-weight: 750; }
+        .canvas-stage { display: grid; min-height: 300px; place-items: center; padding: clamp(12px, 2vw, 22px); background: repeating-conic-gradient(#f5f7f4 0% 25%, #eef2ee 0% 50%) 50% / 18px 18px; }
+        .dark .canvas-stage { background: repeating-conic-gradient(#202a22 0% 25%, #1b251d 0% 50%) 50% / 18px 18px; }
+        #poster { display: block; width: min(100%, 540px); height: auto; border-radius: 4px; background: #f3f7f2; box-shadow: 0 12px 32px rgba(20, 35, 23, .2); }
+        .preview-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 15px; color: var(--muted); font-size: 11px; }
+        .preview-foot i { color: var(--green); }
+        .control-card { margin-bottom: 14px; }
+        .card-body { padding: 16px; }
+        .field { display: grid; gap: 6px; margin-bottom: 15px; }
+        .field:last-child { margin-bottom: 0; }
+        .field label { font-size: 12px; font-weight: 750; }
+        .field select { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); color: var(--ink); }
+        .field select { min-height: 42px; padding: 8px 10px; }
+        .hint { margin: 0; color: var(--muted); font-size: 11px; }
+        .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+        .button-row .button { min-height: 43px; padding-inline: 9px; font-size: 12px; }
+        .button-row .copy-image { grid-column: 1 / -1; }
+        .caption-card .card-head { align-items: flex-start; }
+        .caption-label { display: grid; gap: 2px; }
+        .caption-label span { color: var(--muted); font-size: 10px; font-weight: 450; }
+        .char-count { color: var(--muted); font-size: 10px; white-space: nowrap; }
+        .caption-body { padding: 13px; }
+        .caption-editor { min-height: 220px; max-height: 560px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); color: var(--ink); padding: 12px 14px; line-height: 1.6; }
+        .caption-editor:focus { outline: 3px solid color-mix(in srgb, var(--green) 30%, transparent); outline-offset: 1px; }
+        .caption-editor > :first-child { margin-top: 0; }
+        .caption-editor h2 { margin: 0 0 12px; color: var(--green-dark); font-size: 1.25em; line-height: 1.3; }
+        .caption-editor h3, .caption-editor h4, .caption-editor h5 { margin: 16px 0 7px; color: var(--ink); font-size: 1em; }
+        .caption-editor p { margin: 0 0 10px; }
+        .caption-editor ul, .caption-editor ol { margin: 4px 0 12px; padding-left: 1.5em; }
+        .caption-editor li { margin: 3px 0; padding-left: 2px; }
+        .caption-editor li::marker { color: var(--green); }
+        .caption-editor .posting-table-wrap { overflow-x: auto; margin: 12px 0 16px; border: 1px solid var(--line); border-radius: 8px; }
+        .caption-editor table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .caption-editor th, .caption-editor td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+        .caption-editor th { background: var(--green-soft); color: var(--green-dark); font-weight: 750; }
+        .caption-editor tr:nth-child(even) td { background: color-mix(in srgb, var(--paper) 60%, var(--soft)); }
+        .caption-editor:empty::before { color: var(--muted); content: attr(data-placeholder); }
+        .caption-actions { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-top: 10px; }
+        .caption-actions .button { min-height: 36px; font-size: 11px; }
+        .caption-note { margin: 0; color: var(--muted); font-size: 10px; }
+        .toast { position: fixed; right: 18px; bottom: 18px; z-index: 10; max-width: min(390px, calc(100vw - 36px)); border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 12px 15px; box-shadow: var(--shadow); font-size: 13px; }
+        @media (max-width: 820px) { .layout { grid-template-columns: 1fr; gap: 14px; } .control-column { display: contents; } .control-card { order: -1; margin: 0; } .preview-column { display: contents; } .preview-card { order: 0; } .caption-card { order: 1; } .control-card { width: 100%; } .caption-editor { min-height: 180px; } }
+        @media (max-width: 520px) {
+            .topbar { position: relative; flex-wrap: wrap; align-items: center; padding: 10px 12px; }
+            .brand-mark { width: 35px; height: 35px; }
+            .brand h1 { font-size: 13px; }
+            .brand p { font-size: 10px; }
+            .top-actions { width: 100%; justify-content: flex-end; gap: 5px; }
+            .top-actions .back-link, .top-actions .button span { display: none; }
+            .top-actions .button, .top-actions .icon-button { width: 37px; min-height: 37px; padding: 7px; }
+            .top-actions .select { flex: 1; width: auto; max-width: none; }
+            .wrap { padding: 18px 11px 32px; }
+            .intro p:last-child { font-size: 13px; }
+            .select { width: min(165px, 37vw); min-height: 36px; padding: 6px; font-size: 11px; }
+            .canvas-stage { min-height: auto; padding: 9px; }
+            .preview-head { padding: 11px 13px; }
+            .preview-foot { font-size: 10px; }
+            .card-body { padding: 13px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark" aria-hidden="true"><i class="fa-solid fa-leaf"></i></div>
+            <div><h1>Lebenswertes Schlüchtern</h1><p>Bürgerinitiative · Social-Media-Poster</p></div>
+        </div>
+        <div class="top-actions">
+            <select id="source-select" class="select" aria-label="Quelldatei auswählen">
+                <option value="content.md">content.md</option>
+                <option value="content_org.md">content_org.md</option>
+                <option value="content Kopie.md">content Kopie.md</option>
+                <option value="content Kopie 2.md">content Kopie 2.md</option>
+            </select>
+            <button id="load-button" class="button primary" type="button" title="Inhalte laden"><i class="fa-solid fa-rotate"></i><span>Laden</span></button>
+            <button id="open-file-button" class="button" type="button" title="Markdown-Datei auswählen"><i class="fa-solid fa-folder-open"></i><span>Datei</span></button>
+            <input id="file-input" class="file-input" type="file" accept=".md,.markdown,text/markdown,text/plain">
+            <a class="button back-link" href="index.html" title="Zur Kachelansicht"><i class="fa-solid fa-grip"></i><span>Infoportal</span></a>
+            <button id="theme-toggle" class="icon-button" type="button" aria-label="Darstellung wechseln" title="Darstellung wechseln"><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+
+    <main class="wrap">
+        <section class="intro">
+            <p class="eyebrow">Teilen · Informieren · Mitreden</p>
+            <h2>Social-Media-Poster erstellen</h2>
+            <p>Wähle ein Thema aus dem Dokument. Das Hochformat-Poster wird sofort erstellt; der vollständige Text für deinen Beitrag steht darunter zum Kopieren bereit.</p>
+        </section>
+        <p id="status" class="status" role="status" aria-live="polite">content.md wird geladen …</p>
+
+        <div class="layout">
+            <section class="preview-column" aria-label="Poster und Postingtext">
+                <div class="preview-card">
+                    <div class="preview-head"><strong><i class="fa-regular fa-image" aria-hidden="true"></i> Poster-Vorschau</strong><span class="aspect-tag">4:5 · 1080 × 1350 px</span></div>
+                    <div class="canvas-stage"><canvas id="poster" width="1080" height="1350" role="img" aria-label="Social-Media-Poster-Vorschau"></canvas></div>
+                    <div class="preview-foot"><span><i class="fa-solid fa-check" aria-hidden="true"></i> Hochformat für Instagram &amp; Facebook</span><span>PNG · 1080 × 1350</span></div>
+                </div>
+                <section class="caption-card" aria-labelledby="caption-heading">
+                    <div class="card-head">
+                        <div class="caption-label"><h3 id="caption-heading">Text für den Beitrag</h3><span>Vollständiger Inhalt des gewählten Themas</span></div>
+                        <span id="char-count" class="char-count">0 Zeichen</span>
+                    </div>
+                    <div class="caption-body">
+                        <div id="caption-text" class="caption-editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Formatierter Postingtext zum Bearbeiten" data-placeholder="Wähle zuerst ein Thema aus …"></div>
+                        <div class="caption-actions">
+                            <p class="caption-note">Tabellen und Listen bleiben formatiert; der Text ist bearbeitbar.</p>
+                            <button id="copy-caption" class="button" type="button"><i class="fa-regular fa-copy" aria-hidden="true"></i> Text kopieren</button>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside class="control-column" aria-label="Poster-Einstellungen">
+                <section class="control-card">
+                    <div class="card-head"><h3><i class="fa-solid fa-sliders" aria-hidden="true"></i> Gestaltung</h3></div>
+                    <div class="card-body">
+                        <div class="field">
+                            <label for="topic-select">Kapitel oder Unterthema</label>
+                            <select id="topic-select" disabled><option>Inhalte werden geladen …</option></select>
+                            <p class="hint">Die Einrückung zeigt die Gliederung aus content.md.</p>
+                        </div>
+                        <div class="button-row">
+                            <button id="copy-image" class="button primary copy-image" type="button" disabled><i class="fa-regular fa-clipboard" aria-hidden="true"></i> PNG in Zwischenablage kopieren</button>
+                            <button id="download-image" class="button" type="button" disabled><i class="fa-solid fa-download" aria-hidden="true"></i> PNG herunterladen</button>
+                            <button id="reload-poster" class="button" type="button" disabled><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Poster aktualisieren</button>
+                        </div>
+                        <p class="hint" style="margin-top:12px">Der PNG-Kopiervorgang funktioniert in unterstützten Browsern über HTTPS oder localhost. Falls die Zwischenablage nicht verfügbar ist, lade das Bild herunter.</p>
+                    </div>
+                </section>
+                <section class="control-card">
+                    <div class="card-head"><h3><i class="fa-solid fa-lightbulb" aria-hidden="true"></i> Zum Layout</h3></div>
+                    <div class="card-body">
+                        <p class="hint">Das Poster zeigt Thema, Kapitelzuordnung und einen automatisch passenden Textausschnitt. Der vollständige Inhalt bleibt im Postingtext darunter erhalten.</p>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script>
+        const SOURCE_FILES = ['content.md', 'content_org.md', 'content Kopie.md', 'content Kopie 2.md'];
+        const POSTER_WIDTH = 1080;
+        const POSTER_HEIGHT = 1350;
+        let topics = [];
+        let selectedTopic = null;
+        let toastTimeout;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            document.getElementById('load-button').addEventListener('click', loadSelectedSource);
+            document.getElementById('source-select').addEventListener('change', loadSelectedSource);
+            document.getElementById('open-file-button').addEventListener('click', () => document.getElementById('file-input').click());
+            document.getElementById('file-input').addEventListener('change', loadLocalFile);
+            document.getElementById('topic-select').addEventListener('change', selectTopic);
+            document.getElementById('copy-image').addEventListener('click', copyPoster);
+            document.getElementById('download-image').addEventListener('click', downloadPoster);
+            document.getElementById('reload-poster').addEventListener('click', drawPoster);
+            document.getElementById('copy-caption').addEventListener('click', copyCaption);
+            document.getElementById('caption-text').addEventListener('input', () => updateCharacterCount());
+            loadSelectedSource();
+        });
+
+        function initTheme() {
+            const saved = localStorage.getItem('theme');
+            const dark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', dark);
+            updateThemeIcon();
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+                updateThemeIcon();
+            });
+        }
+
+        function updateThemeIcon() {
+            const dark = document.documentElement.classList.contains('dark');
+            document.querySelector('#theme-toggle i').className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            document.getElementById('theme-toggle').setAttribute('aria-label', dark ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren');
+        }
+
+        async function loadSelectedSource() {
+            const file = document.getElementById('source-select').value;
+            setStatus(`${file} wird geladen …`);
+            try {
+                const response = await fetch(file, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                renderTopics(await response.text(), file);
+                setStatus(`${file} geladen · ${topics.length} Themen verfügbar.`);
+            } catch (error) {
+                console.warn('Quelldatei konnte nicht geladen werden:', error);
+                setStatus('Die Datei konnte nicht automatisch geladen werden. Wähle „Datei“ und öffne content.md manuell.', true);
+                document.getElementById('topic-select').innerHTML = '<option>Bitte Markdown-Datei öffnen</option>';
+                document.getElementById('topic-select').disabled = true;
+            }
+        }
+
+        async function loadLocalFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            try {
+                renderTopics(await file.text(), file.name);
+                setStatus(`${file.name} geladen · ${topics.length} Themen verfügbar.`);
+                const sourceSelect = document.getElementById('source-select');
+                if (SOURCE_FILES.includes(file.name)) sourceSelect.value = file.name;
+            } catch (error) {
+                console.error(error);
+                setStatus(`Die Datei „${file.name}“ konnte nicht gelesen werden.`, true);
+            }
+            event.target.value = '';
+        }
+
+        function parseMarkdown(markdown) {
+            const roots = [];
+            const stack = [];
+            let promoteH3ToRoot = false;
+            let id = 0;
+            for (const line of markdown.split(/\r?\n/)) {
+                const heading = line.trim().match(/^(#{1,6})\s*(.*?)\s*$/);
+                if (!heading) {
+                    if (stack.length) stack[stack.length - 1].body.push(line);
+                    continue;
+                }
+                const level = heading[1].length;
+                const title = heading[2].trim();
+                if (level === 1) continue;
+                if (level === 2 && !title) {
+                    stack.length = 0;
+                    promoteH3ToRoot = true;
+                    continue;
+                }
+                const node = { id: `topic-${id++}`, title: title || 'Ohne Titel', level, body: [], children: [], parent: null };
+                if (level === 2 || (promoteH3ToRoot && level === 3)) {
+                    roots.push(node);
+                    stack.length = 0;
+                    stack.push(node);
+                    promoteH3ToRoot = false;
+                    continue;
+                }
+                promoteH3ToRoot = false;
+                while (stack.length && stack[stack.length - 1].level >= level) stack.pop();
+                const parent = stack[stack.length - 1];
+                if (parent) {
+                    node.parent = parent;
+                    parent.children.push(node);
+                } else {
+                    roots.push(node);
+                }
+                stack.push(node);
+            }
+            return roots;
+        }
+
+        function flattenTopics(nodes, ancestors = [], result = []) {
+            nodes.forEach(node => {
+                result.push({ node, ancestors });
+                flattenTopics(node.children, [...ancestors, node], result);
+            });
+            return result;
+        }
+
+        function renderTopics(markdown, sourceName) {
+            topics = flattenTopics(parseMarkdown(markdown));
+            const select = document.getElementById('topic-select');
+            select.replaceChildren();
+            if (!topics.length) {
+                select.add(new Option('Keine Themen gefunden', ''));
+                select.disabled = true;
+                setPosterEnabled(false);
+                return;
+            }
+            topics.forEach(({ node, ancestors }) => {
+                const label = `${'　'.repeat(ancestors.length)}${ancestors.length ? '↳ ' : ''}${node.title}`;
+                select.add(new Option(label, node.id));
+            });
+            select.disabled = false;
+            selectedTopic = topics.find(({ node }) => markdownToPlainText(getTopicMarkdown(node))) || topics[0];
+            select.value = selectedTopic.node.id;
+            document.getElementById('caption-text').innerHTML = renderCaptionMarkup(makeCaption(selectedTopic.node));
+            updateCharacterCount();
+            setPosterEnabled(true);
+            drawPoster();
+            if (sourceName) document.title = `Social Media – ${sourceName.replace(/\.md$/i, '')}`;
+        }
+
+        function selectTopic() {
+            selectedTopic = topics.find(entry => entry.node.id === document.getElementById('topic-select').value) || null;
+            if (!selectedTopic) return;
+            document.getElementById('caption-text').innerHTML = renderCaptionMarkup(makeCaption(selectedTopic.node));
+            updateCharacterCount();
+            drawPoster();
+        }
+
+        function makeCaption(node) {
+            return `# ${node.title}\n\n${getTopicMarkdown(node)}`;
+        }
+
+        function getTopicMarkdown(node, headingDepth = 3) {
+            const parts = [];
+            const ownContent = node.body.join('\n').trim();
+            if (ownContent) parts.push(ownContent);
+            node.children.forEach(child => {
+                const childContent = getTopicMarkdown(child, Math.min(headingDepth + 1, 6));
+                if (childContent) parts.push(`${'#'.repeat(headingDepth)} ${child.title}\n${childContent}`);
+            });
+            return parts.join('\n\n');
+        }
+
+        function markdownToPlainText(markdown) {
+            return markdown.split(/\r?\n/).map(line => {
+                const trimmed = line.trim();
+                if (!trimmed) return '';
+                if (/^\|?\s*:?-{2,}/.test(trimmed)) return '';
+                if (trimmed.includes('|')) return trimmed.replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim()).filter(Boolean).join(' · ');
+                return trimmed
+                    .replace(/^#{1,6}\s+/, '')
+                    .replace(/^\s*[-*+]\s+/, '• ')
+                    .replace(/^\s*\d+\.\s+/, '• ')
+                    .replace(/^>\s?/, '')
+                    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1 ($2)')
+                    .replace(/\*\*(.*?)\*\*/g, '$1')
+                    .replace(/\*(.*?)\*/g, '$1')
+                    .replace(/__(.*?)__/g, '$1')
+                    .replace(/_(.*?)_/g, '$1')
+                    .replace(/`([^`]+)`/g, '$1');
+            }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+        }
+
+        function renderCaptionMarkup(markdown) {
+            const lines = markdown.split(/\r?\n/);
+            const blocks = [];
+            let paragraph = [];
+            let listItems = [];
+            let listTag = '';
+
+            const flushParagraph = () => {
+                const text = paragraph.join(' ').trim();
+                if (text) blocks.push(`<p>${formatCaptionInline(text)}</p>`);
+                paragraph = [];
+            };
+            const flushList = () => {
+                if (listItems.length) {
+                    blocks.push(`<${listTag}>${listItems.map(item => `<li>${formatCaptionInline(item)}</li>`).join('')}</${listTag}>`);
+                    listItems = [];
+                    listTag = '';
+                }
+            };
+
+            for (let index = 0; index < lines.length; index++) {
+                const line = lines[index].trim();
+                if (!line) { flushParagraph(); flushList(); continue; }
+                if (index + 1 < lines.length && line.includes('|') && isTableSeparator(lines[index + 1])) {
+                    flushParagraph(); flushList();
+                    const headers = parseTableRow(line);
+                    const alignments = parseTableRow(lines[index + 1]).map(tableAlignment);
+                    const rows = [];
+                    index += 2;
+                    while (index < lines.length && lines[index].includes('|') && lines[index].trim()) rows.push(parseTableRow(lines[index++]));
+                    index--;
+                    const headerHtml = headers.map((cell, cellIndex) => `<th style="border:1px solid #dfe7df;background:#e8f3eb;color:#07552f;padding:8px 10px;text-align:${alignments[cellIndex] || 'left'};font-weight:700">${formatCaptionInline(cell)}</th>`).join('');
+                    const rowHtml = rows.map(row => `<tr>${headers.map((_, cellIndex) => `<td style="border:1px solid #dfe7df;padding:8px 10px;text-align:${alignments[cellIndex] || 'left'};vertical-align:top">${formatCaptionInline(row[cellIndex] || '')}</td>`).join('')}</tr>`).join('');
+                    blocks.push(`<div class="posting-table-wrap"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>${headerHtml}</tr></thead><tbody>${rowHtml}</tbody></table></div>`);
+                    continue;
+                }
+                const heading = line.match(/^(#{1,6})\s+(.+)$/);
+                if (heading) {
+                    flushParagraph(); flushList();
+                    const level = Math.min(Math.max(2, heading[1].length), 5);
+                    blocks.push(`<h${level}>${formatCaptionInline(heading[2])}</h${level}>`);
+                    continue;
+                }
+                if (/^([-*_])\1{2,}\s*$/.test(line)) { flushParagraph(); flushList(); blocks.push('<hr>'); continue; }
+                const item = line.match(/^(?:[-*+]\s+|(\d+)\.\s+)(.*)$/);
+                if (item) {
+                    flushParagraph();
+                    const nextTag = item[1] ? 'ol' : 'ul';
+                    if (listTag && listTag !== nextTag) flushList();
+                    listTag = nextTag;
+                    listItems.push(item[2]);
+                    continue;
+                }
+                if (line.startsWith('>')) {
+                    flushParagraph(); flushList();
+                    blocks.push(`<blockquote>${formatCaptionInline(line.replace(/^>\s?/, ''))}</blockquote>`);
+                    continue;
+                }
+                flushList();
+                paragraph.push(line);
+            }
+            flushParagraph();
+            flushList();
+            return blocks.join('');
+        }
+
+        function formatCaptionInline(text) {
+            return escapeCaptionHtml(text)
+                .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>');
+        }
+
+        function escapeCaptionHtml(text) {
+            return text.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+        }
+
+        function parseTableRow(line) {
+            return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim());
+        }
+
+        function isTableSeparator(line) {
+            const cells = parseTableRow(line);
+            return cells.length > 1 && cells.every(cell => /^:?-{1,}:?$/.test(cell));
+        }
+
+        function tableAlignment(separator) {
+            if (separator.startsWith(':') && separator.endsWith(':')) return 'center';
+            if (separator.endsWith(':')) return 'right';
+            return 'left';
+        }
+
+        function setPosterEnabled(enabled) {
+            ['copy-image', 'download-image', 'reload-poster'].forEach(id => { document.getElementById(id).disabled = !enabled; });
+        }
+
+        function drawPoster() {
+            if (!selectedTopic) return;
+            const canvas = document.getElementById('poster');
+            const context = canvas.getContext('2d');
+            const node = selectedTopic.node;
+            const ancestors = selectedTopic.ancestors;
+            const sidebarWidth = 136;
+            const contentLeft = 198;
+            const right = 1010;
+
+            context.clearRect(0, 0, POSTER_WIDTH, POSTER_HEIGHT);
+            context.fillStyle = '#f3f7f2';
+            context.fillRect(0, 0, POSTER_WIDTH, POSTER_HEIGHT);
+            context.fillStyle = '#ffffff';
+            context.fillRect(0, 0, sidebarWidth, POSTER_HEIGHT);
+            context.fillStyle = '#e2eae2';
+            context.fillRect(sidebarWidth - 1, 0, 2, POSTER_HEIGHT);
+
+            // Vertikale BI-Signatur in der weißen Seitenleiste.
+            context.save();
+            context.translate(sidebarWidth / 2, POSTER_HEIGHT / 2);
+            context.rotate(-Math.PI / 2);
+            const first = 'Lebenswertes';
+            const second = ' Schlüchtern · Bürgerinitiative';
+            context.textAlign = 'left';
+            context.textBaseline = 'middle';
+            context.font = '700 29px Arial, sans-serif';
+            const firstWidth = context.measureText(first).width;
+            const secondWidth = context.measureText(second).width;
+            let textX = -(firstWidth + secondWidth) / 2;
+            context.fillStyle = '#07552f';
+            context.fillText(first, textX, 0);
+            textX += firstWidth;
+            context.fillStyle = '#384a3d';
+            context.font = '600 25px Arial, sans-serif';
+            context.fillText(second, textX, 0);
+            context.restore();
+
+            // Dezente Hintergrundform und obere Kennzeichnung.
+            context.fillStyle = '#e5efe6';
+            context.beginPath();
+            context.arc(930, 125, 185, 0, Math.PI * 2);
+            context.fill();
+            context.fillStyle = '#d9e9dc';
+            context.beginPath();
+            context.arc(1010, 88, 90, 0, Math.PI * 2);
+            context.fill();
+            context.fillStyle = '#08723e';
+            context.fillRect(contentLeft, 133, 52, 7);
+            context.fillStyle = '#526459';
+            context.font = '700 20px Arial, sans-serif';
+            context.textAlign = 'left';
+            context.fillText('LEBENSWERTES SCHLÜCHTERN', contentLeft, 190);
+            context.fillStyle = '#738077';
+            context.font = '500 17px Arial, sans-serif';
+            context.fillText('BÜRGERINITIATIVE · SACHLICH INFORMIERT', contentLeft, 222);
+
+            const path = [...ancestors.map(item => item.title), node.title];
+            const category = path.length > 1 ? path.slice(0, -1).join('  /  ') : 'THEMEN IM ÜBERBLICK';
+            context.fillStyle = '#08723e';
+            context.font = '700 19px Arial, sans-serif';
+            const categoryLines = wrapText(context, category.toLocaleUpperCase('de'), right - contentLeft, 1);
+            context.fillText(categoryLines[0] || 'THEMEN IM ÜBERBLICK', contentLeft, 302);
+
+            let titleFont = 61;
+            let titleLines;
+            do {
+                context.font = `700 ${titleFont}px Arial, sans-serif`;
+                titleLines = wrapText(context, node.title, right - contentLeft, 4);
+                if (titleLines.length <= 3 || titleFont <= 43) break;
+                titleFont -= 2;
+            } while (titleFont > 41);
+            context.fillStyle = '#17251b';
+            context.font = `700 ${titleFont}px Arial, sans-serif`;
+            const titleLineHeight = Math.round(titleFont * 1.17);
+            let y = 378;
+            titleLines.forEach(line => { context.fillText(line, contentLeft, y); y += titleLineHeight; });
+
+            const ruleY = Math.max(y + 22, 550);
+            context.fillStyle = '#cbd9cd';
+            context.fillRect(contentLeft, ruleY, right - contentLeft, 2);
+            context.fillStyle = '#08723e';
+            context.fillRect(contentLeft, ruleY, 82, 5);
+
+            const body = markdownToPlainText(getTopicMarkdown(node));
+            const excerpt = makeExcerpt(body, 690);
+            const bodyStart = ruleY + 64;
+            let bodyFont = 33;
+            let bodyLines;
+            do {
+                context.font = `400 ${bodyFont}px Arial, sans-serif`;
+                bodyLines = wrapText(context, excerpt, right - contentLeft, 12);
+                if (bodyLines.length <= 10 || bodyFont <= 25) break;
+                bodyFont -= 2;
+            } while (bodyFont >= 23);
+            context.fillStyle = '#34443a';
+            context.font = `400 ${bodyFont}px Arial, sans-serif`;
+            const bodyLineHeight = Math.round(bodyFont * 1.48);
+            bodyLines.forEach((line, index) => context.fillText(line, contentLeft, bodyStart + index * bodyLineHeight));
+
+            context.fillStyle = '#d7e4d8';
+            context.fillRect(contentLeft, 1193, right - contentLeft, 2);
+            context.fillStyle = '#526459';
+            context.font = '600 19px Arial, sans-serif';
+            context.fillText('MEHR ERFAHREN · INFORMIERT MITREDEN', contentLeft, 1240);
+            context.fillStyle = '#08723e';
+            context.beginPath();
+            context.arc(contentLeft + 8, 1291, 7, 0, Math.PI * 2);
+            context.fill();
+            context.fillStyle = '#7b897f';
+            context.font = '500 17px Arial, sans-serif';
+            context.fillText('Lebenswertes Schlüchtern · Bürgerinitiative', contentLeft + 28, 1297);
+
+            canvas.setAttribute('aria-label', `Poster: ${node.title}`);
+        }
+
+        function wrapText(context, text, maxWidth, maxLines) {
+            const words = text.split(/\s+/).filter(Boolean);
+            const lines = [];
+            let line = '';
+            for (const word of words) {
+                const candidate = line ? `${line} ${word}` : word;
+                if (context.measureText(candidate).width <= maxWidth || !line) {
+                    line = candidate;
+                } else {
+                    lines.push(line);
+                    line = word;
+                }
+            }
+            if (line) lines.push(line);
+            if (lines.length > maxLines) {
+                const clipped = lines.slice(0, maxLines);
+                let finalLine = clipped[maxLines - 1];
+                while (finalLine && context.measureText(`${finalLine}…`).width > maxWidth) finalLine = finalLine.slice(0, -1).trimEnd();
+                clipped[maxLines - 1] = `${finalLine}…`;
+                return clipped;
+            }
+            return lines;
+        }
+
+        function makeExcerpt(text, maxCharacters) {
+            const clean = text.trim();
+            if (clean.length <= maxCharacters) return clean || 'Wähle ein Thema, um hier den Inhalt als Social-Media-Poster aufzubereiten.';
+            const excerpt = clean.slice(0, maxCharacters);
+            const boundary = excerpt.lastIndexOf(' ');
+            return `${excerpt.slice(0, boundary > maxCharacters * 0.72 ? boundary : maxCharacters).trimEnd()} …`;
+        }
+
+        async function copyPoster() {
+            const canvas = document.getElementById('poster');
+            const button = document.getElementById('copy-image');
+            button.disabled = true;
+            try {
+                const blob = await new Promise((resolve, reject) => canvas.toBlob(result => result ? resolve(result) : reject(new Error('PNG-Erstellung fehlgeschlagen')), 'image/png'));
+                if (!navigator.clipboard || typeof ClipboardItem === 'undefined') throw new Error('Bild-Zwischenablage wird von diesem Browser nicht unterstützt.');
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                showToast('PNG wurde in die Zwischenablage kopiert.');
+            } catch (error) {
+                console.warn('PNG konnte nicht kopiert werden:', error);
+                showToast('Kopieren nicht verfügbar – nutze „PNG herunterladen“.');
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function downloadPoster() {
+            const link = document.createElement('a');
+            const baseName = (selectedTopic?.node.title || 'social-media-poster').toLocaleLowerCase('de').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '');
+            link.download = `${baseName || 'social-media-poster'}.png`;
+            link.href = document.getElementById('poster').toDataURL('image/png');
+            link.click();
+            showToast('PNG-Download gestartet.');
+        }
+
+        async function copyCaption() {
+            const editor = document.getElementById('caption-text');
+            const plainText = richContentToPlainText(editor);
+            try {
+                if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+                    const item = new ClipboardItem({
+                        'text/html': new Blob([editor.innerHTML], { type: 'text/html' }),
+                        'text/plain': new Blob([plainText], { type: 'text/plain' })
+                    });
+                    await navigator.clipboard.write([item]);
+                } else {
+                    throw new Error('Rich-Text-Zwischenablage nicht verfügbar.');
+                }
+                showToast('Postingtext wurde kopiert.');
+            } catch {
+                editor.focus();
+                const range = document.createRange();
+                range.selectNodeContents(editor);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                const copied = document.execCommand('copy');
+                selection.removeAllRanges();
+                showToast(copied ? 'Postingtext wurde kopiert.' : 'Text markiert – bitte manuell kopieren.');
+            }
+        }
+
+        function updateCharacterCount() {
+            const length = richContentToPlainText(document.getElementById('caption-text')).length;
+            document.getElementById('char-count').textContent = `${length.toLocaleString('de-DE')} Zeichen`;
+        }
+
+        function richContentToPlainText(container) {
+            const inlineText = node => {
+                if (node.nodeType === Node.TEXT_NODE) return node.nodeValue;
+                if (node.nodeType !== Node.ELEMENT_NODE) return '';
+                if (node.tagName === 'BR') return '\n';
+                return [...node.childNodes].map(inlineText).join('');
+            };
+            const blocks = [...container.children].map(element => {
+                if (element.tagName === 'TABLE') return tableToPlainText(element);
+                const table = element.querySelector(':scope > table');
+                if (table) return tableToPlainText(table);
+                if (element.tagName === 'UL' || element.tagName === 'OL') {
+                    return [...element.children].map((item, index) => `${element.tagName === 'OL' ? `${index + 1}.` : '•'} ${inlineText(item).trim()}`).join('\n');
+                }
+                const text = inlineText(element).trim();
+                return text;
+            }).filter(Boolean);
+            return blocks.join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
+        }
+
+        function tableToPlainText(table) {
+            const rows = [...table.querySelectorAll('tr')].map(row => [...row.querySelectorAll('th, td')].map(cell => cell.innerText.trim()));
+            if (!rows.length) return '';
+            const formatRow = row => `| ${row.join(' | ')} |`;
+            const separator = `| ${rows[0].map(() => '---').join(' | ')} |`;
+            return [formatRow(rows[0]), separator, ...rows.slice(1).map(formatRow)].join('\n');
+        }
+
+        function setStatus(message, error = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.classList.toggle('error', error);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.hidden = false;
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => { toast.hidden = true; }, 3500);
+        }
+    </script>
+</body>
+</html>

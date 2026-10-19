@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="de" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f5f8f5">
+    <title>Baumansicht – Infoportal Schlüchtern</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            color-scheme: light;
+            --page: #f5f8f5;
+            --surface: #fff;
+            --surface-soft: #f8faf8;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8e2;
+            --accent: #087443;
+            --accent-soft: #eaf5ee;
+            --focus: #16834e;
+            --shadow: 0 12px 32px rgba(23, 49, 34, .07);
+        }
+        .dark {
+            color-scheme: dark;
+            --page: #0a120d;
+            --surface: #121e16;
+            --surface-soft: #16251b;
+            --text: #e2e8f0;
+            --muted: #9aa99e;
+            --border: #263b2d;
+            --accent: #53b77d;
+            --accent-soft: #1a3525;
+            --focus: #76d69c;
+            --shadow: 0 12px 32px rgba(0, 0, 0, .2);
+        }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: var(--page);
+            color: var(--text);
+            font: 15px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        button, input, select { font: inherit; }
+        button, a, select { -webkit-tap-highlight-color: transparent; }
+        a { color: inherit; }
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            min-height: 76px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 12px clamp(16px, 4vw, 48px);
+            border-bottom: 1px solid var(--border);
+            background: color-mix(in srgb, var(--surface) 92%, transparent);
+            backdrop-filter: blur(16px);
+        }
+        .brand { display: flex; min-width: 0; align-items: center; gap: 12px; }
+        .brand-mark {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            flex: 0 0 auto;
+            place-items: center;
+            border-radius: 13px;
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 5px 14px color-mix(in srgb, var(--accent) 25%, transparent);
+        }
+        .brand h1 { margin: 0; font-size: 16px; line-height: 1.25; }
+        .brand p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+        .top-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+        .button, .select, .icon-button {
+            min-height: 38px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface);
+            color: var(--text);
+        }
+        .button, .icon-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 12px; text-decoration: none; cursor: pointer; transition: border-color .16s, background .16s, transform .16s; }
+        .button:hover, .icon-button:hover, .select:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); background: var(--accent-soft); }
+        .button:active, .icon-button:active { transform: translateY(1px); }
+        .button.primary { border-color: var(--accent); background: var(--accent); color: #fff; }
+        .button.primary:hover { background: #06663b; }
+        .button:focus-visible, .icon-button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 45%, transparent); outline-offset: 2px; }
+        .select { max-width: 190px; padding: 7px 10px; }
+        .file-input { display: none; }
+        .page-shell { width: min(1500px, 100%); margin: 0 auto; padding: 24px clamp(12px, 3vw, 36px) 36px; }
+        .intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin: 2px 0 18px; }
+        .eyebrow { margin: 0 0 5px; color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+        .intro h2 { margin: 0; font-size: clamp(23px, 3vw, 32px); line-height: 1.2; letter-spacing: -.025em; }
+        .intro-copy { max-width: 610px; margin: 7px 0 0; color: var(--muted); }
+        .status { min-height: 24px; margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+        .status.error { color: #b42318; }
+        .dark .status.error { color: #fda29b; }
+        .workspace { display: grid; min-height: min(72vh, 820px); grid-template-columns: minmax(270px, 360px) minmax(0, 1fr); gap: 18px; align-items: stretch; }
+        .panel { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); }
+        .tree-panel { display: flex; flex-direction: column; max-height: calc(100vh - 190px); min-height: 450px; }
+        .panel-head { padding: 17px 17px 13px; border-bottom: 1px solid var(--border); }
+        .panel-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .panel-title { margin: 0; font-size: 14px; font-weight: 750; }
+        .tree-count { border-radius: 999px; background: var(--accent-soft); color: var(--accent); padding: 2px 9px; font-size: 11px; font-weight: 750; white-space: nowrap; }
+        .search-wrap { position: relative; margin-top: 12px; }
+        .search-wrap i { position: absolute; top: 50%; left: 12px; color: var(--muted); transform: translateY(-50%); }
+        .search { width: 100%; min-height: 40px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-soft); color: var(--text); padding: 8px 36px 8px 36px; }
+        .search-clear { position: absolute; top: 50%; right: 8px; display: none; width: 28px; height: 28px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; transform: translateY(-50%); }
+        .search-clear.visible { display: grid; place-items: center; }
+        .tree-tools { display: flex; gap: 7px; margin-top: 10px; }
+        .text-button { border: 0; background: transparent; color: var(--accent); padding: 2px 3px; font-size: 11px; font-weight: 700; cursor: pointer; }
+        .text-button:hover { text-decoration: underline; }
+        .tree-scroll { overflow: auto; flex: 1; padding: 12px 12px 18px; scrollbar-color: var(--border) transparent; }
+        .tree-root, .tree-children { margin: 0; padding: 0; list-style: none; }
+        .tree-children { display: none; margin: 2px 0 4px 13px; padding-left: 12px; border-left: 1px solid var(--border); }
+        .tree-node.expanded > .tree-children { display: block; }
+        .tree-node { min-width: 0; }
+        .tree-row { display: flex; min-height: 34px; align-items: center; gap: 3px; border-radius: 8px; }
+        .tree-row:hover { background: var(--surface-soft); }
+        .tree-node.selected > .tree-row { background: var(--accent-soft); }
+        .tree-node.selected > .tree-row .tree-label { color: var(--accent); font-weight: 750; }
+        .tree-toggle { display: grid; width: 25px; height: 28px; flex: 0 0 25px; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+        .tree-toggle:hover { background: var(--border); color: var(--text); }
+        .tree-toggle .fa-chevron-right { font-size: 9px; transition: transform .16s ease; }
+        .tree-node.expanded > .tree-row .tree-toggle .fa-chevron-right { transform: rotate(90deg); }
+        .tree-spacer { width: 25px; flex: 0 0 25px; }
+        .tree-dot { width: 7px; height: 7px; flex: 0 0 7px; border: 1.5px solid var(--accent); border-radius: 50%; }
+        .tree-node:not(.has-children) .tree-dot { width: 5px; height: 5px; flex-basis: 5px; border-color: var(--muted); }
+        .tree-label { min-width: 0; border: 0; background: transparent; color: var(--text); padding: 6px 7px 6px 3px; text-align: left; line-height: 1.35; cursor: pointer; }
+        .tree-label:hover { color: var(--accent); }
+        .tree-empty { padding: 14px; color: var(--muted); font-size: 13px; }
+        .reader { display: flex; flex-direction: column; min-height: 450px; }
+        .reader-head { padding: clamp(20px, 3vw, 34px) clamp(20px, 4vw, 46px) 20px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, var(--surface), var(--surface-soft)); }
+        .breadcrumbs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 13px; color: var(--muted); font-size: 12px; }
+        .breadcrumbs .sep { color: color-mix(in srgb, var(--muted) 60%, transparent); }
+        .reader-category { display: inline-flex; align-items: center; gap: 7px; margin: 0 0 9px; color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+        .reader-category::before { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); content: ""; }
+        .reader-title { margin: 0; font-size: clamp(24px, 3.3vw, 38px); line-height: 1.18; letter-spacing: -.03em; }
+        .entry-navigation { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; margin-top: 22px; padding-top: 15px; border-top: 1px solid var(--border); }
+        .entry-nav-button { display: flex; min-width: 0; min-height: 48px; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface); color: var(--text); padding: 7px 11px; text-align: left; cursor: pointer; transition: border-color .16s, background .16s, opacity .16s; }
+        .entry-nav-button.next { justify-content: flex-end; text-align: right; }
+        .entry-nav-button:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+        .entry-nav-button:disabled { opacity: .45; cursor: not-allowed; }
+        .entry-nav-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 45%, transparent); outline-offset: 2px; }
+        .entry-nav-button > i { flex: 0 0 auto; color: var(--accent); }
+        .entry-nav-copy { display: grid; min-width: 0; gap: 1px; }
+        .entry-nav-caption { color: var(--muted); font-size: 10px; font-weight: 700; }
+        .entry-nav-title { overflow: hidden; font-size: 12px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+        .entry-nav-position { min-width: 54px; color: var(--muted); font-size: 11px; font-weight: 750; text-align: center; white-space: nowrap; }
+        .reader-content { overflow: auto; flex: 1; padding: 22px clamp(20px, 4vw, 46px) 40px; }
+        .reader-content > :first-child { margin-top: 0; }
+        .reader-content p { margin: 0 0 1.1em; }
+        .reader-content ul, .reader-content ol { margin: 0 0 1.2em; padding-left: 1.5em; }
+        .reader-content li { margin: .35em 0; padding-left: .15em; }
+        .reader-content li::marker { color: var(--accent); }
+        .reader-content blockquote { margin: 1em 0; border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; color: var(--muted); }
+        .reader-content a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+        .reader-content strong { color: color-mix(in srgb, var(--accent) 88%, var(--text)); }
+        .reader-content code { border-radius: 5px; background: var(--surface-soft); padding: 2px 5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
+        .reader-content hr { margin: 1.5em 0; border: 0; border-top: 1px solid var(--border); }
+        .table-wrap { overflow-x: auto; margin: 1.2em 0; border: 1px solid var(--border); border-radius: 10px; }
+        .reader-content table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .reader-content th, .reader-content td { border-bottom: 1px solid var(--border); padding: 9px 12px; text-align: left; vertical-align: top; }
+        .reader-content th { background: var(--surface-soft); font-weight: 750; }
+        .reader-content tr:last-child td { border-bottom: 0; }
+        .empty-reader { display: grid; flex: 1; place-items: center; padding: 32px; text-align: center; color: var(--muted); }
+        .empty-reader .empty-icon { display: grid; width: 54px; height: 54px; margin: 0 auto 14px; place-items: center; border: 1px solid var(--border); border-radius: 17px; background: var(--surface-soft); color: var(--accent); font-size: 20px; }
+        .empty-reader h3 { margin: 0 0 7px; color: var(--text); font-size: 17px; }
+        .empty-reader p { max-width: 340px; margin: 0; font-size: 13px; }
+        @media (max-width: 760px) {
+            .topbar { position: relative; align-items: flex-start; }
+            .top-actions { gap: 6px; }
+            .top-actions .button span { display: none; }
+            .top-actions .button { width: 38px; padding: 8px; }
+            .select { max-width: 138px; min-height: 36px; font-size: 12px; }
+            .page-shell { padding-top: 20px; }
+            .intro { align-items: flex-start; }
+            .workspace { grid-template-columns: 1fr; gap: 12px; }
+            .tree-panel { max-height: 45vh; min-height: 260px; }
+            .reader { min-height: 48vh; }
+            .entry-navigation { gap: 6px; margin-top: 18px; }
+            .entry-nav-button { gap: 7px; padding: 7px 8px; }
+            .entry-nav-title { max-width: 28vw; }
+        }
+        @media (max-width: 430px) {
+            .brand-mark { width: 36px; height: 36px; }
+            .brand h1 { font-size: 14px; }
+            .brand p { font-size: 10px; }
+            .topbar { gap: 8px; padding: 10px 12px; }
+            .top-actions { max-width: 165px; }
+            .top-actions .back-link { display: none; }
+            .intro-copy { font-size: 13px; }
+            .reader-head { padding-top: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark" aria-hidden="true"><i class="fa-solid fa-city"></i></div>
+            <div>
+                <h1>Bergwinkelstadt Schlüchtern</h1>
+                <p>Infoportal · Strukturansicht</p>
+            </div>
+        </div>
+        <div class="top-actions">
+            <select id="source-select" class="select" aria-label="Inhaltsdatei auswählen">
+                <option value="content.md">content.md</option>
+                <option value="content_org.md">content_org.md</option>
+                <option value="content Kopie.md">content Kopie.md</option>
+                <option value="content Kopie 2.md">content Kopie 2.md</option>
+            </select>
+            <button id="reload-button" class="button primary" type="button" title="Inhalte neu laden"><i class="fa-solid fa-rotate"></i><span>Laden</span></button>
+            <button id="open-file-button" class="button" type="button" title="Markdown-Datei vom Gerät öffnen"><i class="fa-solid fa-folder-open"></i><span>Datei öffnen</span></button>
+            <input id="file-input" class="file-input" type="file" accept=".md,.markdown,text/markdown,text/plain">
+            <a class="button back-link" href="index.html" title="Zur Kachelansicht wechseln"><i class="fa-solid fa-grip"></i><span>Kachelansicht</span></a>
+            <button id="theme-toggle" class="icon-button" type="button" aria-label="Darstellung wechseln" title="Darstellung wechseln"><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+
+    <main class="page-shell">
+        <section class="intro" aria-labelledby="page-title">
+            <div>
+                <p class="eyebrow">Alternative Navigation</p>
+                <h2 id="page-title">Themen im Überblick</h2>
+                <p class="intro-copy">Die Baumansicht zeigt Kapitel und Unterthemen in ihrer Gliederung. Wähle links einen Eintrag, um den zugehörigen Inhalt zu lesen.</p>
+            </div>
+        </section>
+        <p id="status" class="status" role="status" aria-live="polite">Inhalte werden geladen …</p>
+        <div class="workspace">
+            <aside class="panel tree-panel" aria-label="Themenstruktur">
+                <div class="panel-head">
+                    <div class="panel-title-row">
+                        <h3 class="panel-title">Inhaltsstruktur</h3>
+                        <span id="tree-count" class="tree-count">Wird geladen …</span>
+                    </div>
+                    <div class="search-wrap">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <input id="tree-search" class="search" type="search" placeholder="Themen durchsuchen …" autocomplete="off" aria-label="Baumstruktur durchsuchen">
+                        <button id="clear-search" class="search-clear" type="button" aria-label="Suche leeren" title="Suche leeren"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="tree-tools">
+                        <button id="expand-all" class="text-button" type="button">Alles aufklappen</button>
+                        <span aria-hidden="true" style="color:var(--border)">·</span>
+                        <button id="collapse-all" class="text-button" type="button">Alles zuklappen</button>
+                    </div>
+                </div>
+                <nav id="tree" class="tree-scroll" aria-label="Kapitel und Unterthemen">
+                    <p class="tree-empty">Die Themenstruktur wird geladen.</p>
+                </nav>
+            </aside>
+
+            <article class="panel reader" aria-live="polite">
+                <div id="reader-empty" class="empty-reader">
+                    <div>
+                        <div class="empty-icon"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i></div>
+                        <h3>Ein Thema auswählen</h3>
+                        <p>Öffne links ein Kapitel oder Unterthema. Der Inhalt erscheint hier, ohne die Übersicht zu verlassen.</p>
+                    </div>
+                </div>
+                <div id="reader-view" hidden>
+                    <header class="reader-head">
+                        <div id="breadcrumbs" class="breadcrumbs"></div>
+                        <p id="reader-category" class="reader-category">Kapitel</p>
+                        <h2 id="reader-title" class="reader-title"></h2>
+                        <nav class="entry-navigation" aria-label="Zwischen Einträgen navigieren">
+                            <button id="previous-entry" class="entry-nav-button" type="button" disabled>
+                                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                                <span class="entry-nav-copy">
+                                    <span class="entry-nav-caption">Vorheriger Eintrag</span>
+                                    <span id="previous-entry-title" class="entry-nav-title">—</span>
+                                </span>
+                            </button>
+                            <span id="entry-position" class="entry-nav-position" aria-live="polite">— / —</span>
+                            <button id="next-entry" class="entry-nav-button next" type="button" disabled>
+                                <span class="entry-nav-copy">
+                                    <span class="entry-nav-caption">Nächster Eintrag</span>
+                                    <span id="next-entry-title" class="entry-nav-title">—</span>
+                                </span>
+                                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                            </button>
+                        </nav>
+                    </header>
+                    <div id="reader-content" class="reader-content"></div>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <script>
+        const SOURCE_FILES = ['content.md', 'content_org.md', 'content Kopie.md', 'content Kopie 2.md'];
+        let treeNodes = [];
+        let selectedNodeId = null;
+        let documentTitle = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            document.getElementById('reload-button').addEventListener('click', loadSelectedSource);
+            document.getElementById('open-file-button').addEventListener('click', () => document.getElementById('file-input').click());
+            document.getElementById('file-input').addEventListener('change', loadLocalFile);
+            document.getElementById('tree-search').addEventListener('input', filterTree);
+            document.getElementById('clear-search').addEventListener('click', () => {
+                const input = document.getElementById('tree-search');
+                input.value = '';
+                filterTree();
+                input.focus();
+            });
+            document.getElementById('expand-all').addEventListener('click', () => setAllExpanded(true));
+            document.getElementById('collapse-all').addEventListener('click', () => setAllExpanded(false));
+            document.getElementById('previous-entry').addEventListener('click', () => navigateEntry(-1));
+            document.getElementById('next-entry').addEventListener('click', () => navigateEntry(1));
+
+            const select = document.getElementById('source-select');
+            for (const file of SOURCE_FILES) {
+                try {
+                    if (decodeURIComponent(window.location.hash.slice(1)) === file) select.value = file;
+                } catch { /* Ungültige URL-Fragmente ignorieren. */ }
+            }
+            loadSelectedSource();
+        });
+
+        function initTheme() {
+            const saved = localStorage.getItem('theme');
+            const dark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', dark);
+            updateThemeIcon();
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+                updateThemeIcon();
+            });
+        }
+
+        function updateThemeIcon() {
+            const icon = document.querySelector('#theme-toggle i');
+            const dark = document.documentElement.classList.contains('dark');
+            icon.className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            document.getElementById('theme-toggle').setAttribute('aria-label', dark ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren');
+        }
+
+        async function loadSelectedSource() {
+            const file = document.getElementById('source-select').value;
+            setStatus(`${file} wird geladen …`);
+            try {
+                const response = await fetch(file, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                renderMarkdownTree(await response.text(), file);
+                setStatus(`${file} geladen.`);
+            } catch (error) {
+                console.warn('Markdown konnte nicht geladen werden:', error);
+                setStatus('Automatisches Laden nicht möglich. Öffne eine Markdown-Datei vom Gerät oder rufe diese Seite über einen lokalen Webserver auf.', true);
+                document.getElementById('tree').innerHTML = '<p class="tree-empty">Keine Inhalte geladen. Wähle oben „Datei öffnen“ oder starte die Seite über einen Webserver.</p>';
+                document.getElementById('tree-count').textContent = 'Keine Inhalte';
+            }
+        }
+
+        async function loadLocalFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            try {
+                renderMarkdownTree(await file.text(), file.name);
+                setStatus(`${file.name} geladen.`);
+                document.getElementById('source-select').value = SOURCE_FILES.includes(file.name) ? file.name : SOURCE_FILES[0];
+            } catch (error) {
+                console.error(error);
+                setStatus(`Die Datei „${file.name}“ konnte nicht gelesen werden.`, true);
+            }
+            event.target.value = '';
+        }
+
+        function parseMarkdownTree(markdown) {
+            const roots = [];
+            const stack = [];
+            let nextId = 0;
+            let promoteH3ToRoot = false;
+            documentTitle = '';
+
+            for (const line of markdown.split(/\r?\n/)) {
+                const heading = line.trim().match(/^(#{1,6})\s*(.*?)\s*$/);
+                if (!heading) {
+                    const current = stack[stack.length - 1];
+                    if (current) current.body.push(line);
+                    continue;
+                }
+
+                const level = heading[1].length;
+                const title = heading[2].trim();
+                if (level === 1) {
+                    if (title) documentTitle = title;
+                    continue;
+                }
+                if (level === 2 && !title) {
+                    stack.length = 0;
+                    promoteH3ToRoot = true;
+                    continue;
+                }
+
+                const node = { id: `topic-${nextId++}`, title, level, body: [], children: [], parent: null };
+                if (level === 2 || (promoteH3ToRoot && level === 3)) {
+                    roots.push(node);
+                    stack.length = 0;
+                    stack.push(node);
+                    promoteH3ToRoot = false;
+                    continue;
+                }
+
+                promoteH3ToRoot = false;
+                while (stack.length && stack[stack.length - 1].level >= level) stack.pop();
+                const parent = stack[stack.length - 1];
+                if (parent) {
+                    node.parent = parent;
+                    parent.children.push(node);
+                    stack.push(node);
+                } else {
+                    roots.push(node);
+                    stack.push(node);
+                }
+            }
+            return roots;
+        }
+
+        function renderMarkdownTree(markdown, sourceName) {
+            treeNodes = parseMarkdownTree(markdown);
+            selectedNodeId = null;
+            document.getElementById('reader-empty').hidden = false;
+            document.getElementById('reader-view').hidden = true;
+            renderTree();
+            updateEntryNavigation();
+            const topicCount = countNodes(treeNodes);
+            document.getElementById('tree-count').textContent = `${treeNodes.length} Kapitel · ${topicCount} Themen`;
+            document.getElementById('page-title').textContent = documentTitle || 'Themen im Überblick';
+            document.title = `${documentTitle || 'Baumansicht'} – Infoportal Schlüchtern`;
+            if (!treeNodes.length) setStatus(`${sourceName} enthält keine gegliederten Kapitel.`, true);
+        }
+
+        function countNodes(nodes) {
+            return nodes.reduce((count, node) => count + 1 + countNodes(node.children), 0);
+        }
+
+        function renderTree() {
+            const tree = document.getElementById('tree');
+            tree.replaceChildren();
+            const rootList = document.createElement('ul');
+            rootList.className = 'tree-root';
+            treeNodes.forEach((node, index) => rootList.appendChild(createTreeNode(node, [], index === 0)));
+            if (!treeNodes.length) {
+                const empty = document.createElement('p');
+                empty.className = 'tree-empty';
+                empty.textContent = 'Keine Kapitel gefunden.';
+                tree.appendChild(empty);
+            } else {
+                tree.appendChild(rootList);
+            }
+        }
+
+        function createTreeNode(node, ancestors, initiallyOpen) {
+            const item = document.createElement('li');
+            item.className = `tree-node${node.children.length ? ' has-children' : ''}${initiallyOpen && node.children.length ? ' expanded' : ''}`;
+            item.dataset.nodeId = node.id;
+            item.dataset.search = `${node.title} ${node.body.join(' ')}`.toLocaleLowerCase('de');
+            item.dataset.initialOpen = String(Boolean(initiallyOpen));
+
+            const row = document.createElement('div');
+            row.className = 'tree-row';
+            if (node.children.length) {
+                const toggle = document.createElement('button');
+                toggle.type = 'button';
+                toggle.className = 'tree-toggle';
+                toggle.setAttribute('aria-label', `${initiallyOpen ? 'Zuklappen' : 'Aufklappen'}: ${node.title}`);
+                toggle.setAttribute('aria-expanded', String(initiallyOpen));
+                toggle.innerHTML = '<i class="fa-solid fa-chevron-right" aria-hidden="true"></i>';
+                toggle.addEventListener('click', () => {
+                    const open = item.classList.toggle('expanded');
+                    toggle.setAttribute('aria-expanded', String(open));
+                    toggle.setAttribute('aria-label', `${open ? 'Zuklappen' : 'Aufklappen'}: ${node.title}`);
+                });
+                row.appendChild(toggle);
+            } else {
+                const spacer = document.createElement('span');
+                spacer.className = 'tree-spacer';
+                row.appendChild(spacer);
+            }
+
+            const dot = document.createElement('span');
+            dot.className = 'tree-dot';
+            dot.setAttribute('aria-hidden', 'true');
+            row.appendChild(dot);
+
+            const label = document.createElement('button');
+            label.type = 'button';
+            label.className = 'tree-label';
+            label.textContent = node.title || 'Ohne Titel';
+            label.addEventListener('click', () => selectNode(node, ancestors));
+            row.appendChild(label);
+            item.appendChild(row);
+
+            if (node.children.length) {
+                const childList = document.createElement('ul');
+                childList.className = 'tree-children';
+                node.children.forEach(child => childList.appendChild(createTreeNode(child, [...ancestors, node], false)));
+                item.appendChild(childList);
+            }
+            return item;
+        }
+
+        function selectNode(node, ancestors) {
+            selectedNodeId = node.id;
+            document.querySelectorAll('.tree-node.selected').forEach(element => element.classList.remove('selected'));
+            const selected = document.querySelector(`[data-node-id="${node.id}"]`);
+            if (selected) selected.classList.add('selected');
+            ancestors.forEach(ancestor => {
+                const element = document.querySelector(`[data-node-id="${ancestor.id}"]`);
+                if (element) {
+                    element.classList.add('expanded');
+                    const toggle = element.querySelector(':scope > .tree-row .tree-toggle');
+                    if (toggle) toggle.setAttribute('aria-expanded', 'true');
+                }
+            });
+
+            const crumbs = [...ancestors, node];
+            const breadcrumbs = document.getElementById('breadcrumbs');
+            breadcrumbs.replaceChildren();
+            crumbs.forEach((crumb, index) => {
+                if (index) {
+                    const sep = document.createElement('span');
+                    sep.className = 'sep';
+                    sep.textContent = '/';
+                    breadcrumbs.appendChild(sep);
+                }
+                const text = document.createElement('span');
+                text.textContent = crumb.title;
+                breadcrumbs.appendChild(text);
+            });
+            document.getElementById('reader-category').textContent = node.parent ? `Unterthema · Ebene ${node.level - 1}` : 'Hauptkapitel';
+            document.getElementById('reader-title').textContent = node.title;
+            document.getElementById('reader-content').innerHTML = renderMarkdown(node.body.join('\n')) || '<p class="status">Für diesen Abschnitt ist kein eigener Fließtext hinterlegt.</p>';
+            document.getElementById('reader-empty').hidden = true;
+            document.getElementById('reader-view').hidden = false;
+            updateEntryNavigation();
+            if (window.matchMedia('(max-width: 760px)').matches) document.querySelector('.reader').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function flattenTree(nodes, ancestors = [], entries = []) {
+            nodes.forEach(node => {
+                entries.push({ node, ancestors });
+                flattenTree(node.children, [...ancestors, node], entries);
+            });
+            return entries;
+        }
+
+        function getVisibleEntries(entries = flattenTree(treeNodes)) {
+            return entries.filter(({ node }) => {
+                const element = document.querySelector(`[data-node-id="${node.id}"]`);
+                return element && !element.hidden;
+            });
+        }
+
+        function updateEntryNavigation() {
+            const allEntries = flattenTree(treeNodes);
+            const visibleEntries = getVisibleEntries(allEntries);
+            const selectedIndex = allEntries.findIndex(entry => entry.node.id === selectedNodeId);
+            const visibleIndex = visibleEntries.findIndex(entry => entry.node.id === selectedNodeId);
+            let previous = null;
+            let next = null;
+
+            if (visibleIndex >= 0) {
+                previous = visibleEntries[visibleIndex - 1] || null;
+                next = visibleEntries[visibleIndex + 1] || null;
+            } else if (selectedIndex >= 0) {
+                previous = visibleEntries.filter(entry => allEntries.indexOf(entry) < selectedIndex).at(-1) || null;
+                next = visibleEntries.find(entry => allEntries.indexOf(entry) > selectedIndex) || null;
+            }
+
+            const previousButton = document.getElementById('previous-entry');
+            const nextButton = document.getElementById('next-entry');
+            previousButton.disabled = !previous;
+            nextButton.disabled = !next;
+            document.getElementById('previous-entry-title').textContent = previous ? previous.node.title : 'Anfang';
+            document.getElementById('next-entry-title').textContent = next ? next.node.title : 'Ende';
+            previousButton.title = previous ? `Vorheriger Eintrag: ${previous.node.title}` : 'Kein vorheriger Eintrag';
+            nextButton.title = next ? `Nächster Eintrag: ${next.node.title}` : 'Kein nächster Eintrag';
+
+            const position = document.getElementById('entry-position');
+            if (visibleIndex >= 0) {
+                position.textContent = `${visibleIndex + 1} / ${visibleEntries.length}`;
+            } else if (selectedIndex >= 0 && document.getElementById('tree-search').value.trim()) {
+                position.textContent = `${visibleEntries.length} Treffer`;
+            } else {
+                position.textContent = '— / —';
+            }
+        }
+
+        function navigateEntry(direction) {
+            const allEntries = flattenTree(treeNodes);
+            const visibleEntries = getVisibleEntries(allEntries);
+            const selectedIndex = allEntries.findIndex(entry => entry.node.id === selectedNodeId);
+            const visibleIndex = visibleEntries.findIndex(entry => entry.node.id === selectedNodeId);
+            let target = null;
+
+            if (visibleIndex >= 0) {
+                target = visibleEntries[visibleIndex + direction] || null;
+            } else if (selectedIndex >= 0) {
+                target = direction < 0
+                    ? visibleEntries.filter(entry => allEntries.indexOf(entry) < selectedIndex).at(-1) || null
+                    : visibleEntries.find(entry => allEntries.indexOf(entry) > selectedIndex) || null;
+            } else {
+                target = direction < 0 ? visibleEntries.at(-1) || null : visibleEntries[0] || null;
+            }
+            if (target) selectNode(target.node, target.ancestors);
+        }
+
+        function setAllExpanded(expanded) {
+            document.querySelectorAll('.tree-node.has-children').forEach(item => {
+                item.classList.toggle('expanded', expanded);
+                const toggle = item.querySelector(':scope > .tree-row .tree-toggle');
+                if (toggle) {
+                    toggle.setAttribute('aria-expanded', String(expanded));
+                    toggle.setAttribute('aria-label', `${expanded ? 'Zuklappen' : 'Aufklappen'}: ${toggle.parentElement.querySelector('.tree-label').textContent}`);
+                }
+            });
+        }
+
+        function filterTree() {
+            const query = document.getElementById('tree-search').value.trim().toLocaleLowerCase('de');
+            document.getElementById('clear-search').classList.toggle('visible', Boolean(query));
+            const countVisible = nodes => {
+                let total = 0;
+                nodes.forEach(node => {
+                    const item = document.querySelector(`[data-node-id="${node.id}"]`);
+                    const ownMatch = !query || item.dataset.search.includes(query);
+                    const childMatches = countVisible(node.children);
+                    const visible = ownMatch || childMatches > 0;
+                    item.hidden = !visible;
+                    if (query && childMatches) {
+                        item.classList.add('expanded');
+                        const toggle = item.querySelector(':scope > .tree-row .tree-toggle');
+                        if (toggle) toggle.setAttribute('aria-expanded', 'true');
+                    } else if (!query && item.classList.contains('has-children')) {
+                        const open = item.dataset.initialOpen === 'true';
+                        item.classList.toggle('expanded', open);
+                        const toggle = item.querySelector(':scope > .tree-row .tree-toggle');
+                        if (toggle) toggle.setAttribute('aria-expanded', String(open));
+                    }
+                    if (visible) total++;
+                });
+                return total;
+            };
+            countVisible(treeNodes);
+            document.querySelector('.search-empty')?.remove();
+            if (query && !document.querySelector('.tree-node:not([hidden])')) {
+                const empty = document.createElement('p');
+                empty.className = 'tree-empty search-empty';
+                empty.textContent = 'Keine passenden Themen gefunden.';
+                document.getElementById('tree').appendChild(empty);
+            } else {
+                document.querySelector('.search-empty')?.remove();
+            }
+            updateEntryNavigation();
+        }
+
+        function renderMarkdown(markdown) {
+            const lines = markdown.split(/\r?\n/);
+            const blocks = [];
+            let paragraph = [];
+            let list = [];
+            let listType = '';
+
+            const flushParagraph = () => {
+                const text = paragraph.join(' ').trim();
+                if (text) blocks.push(`<p>${formatInline(text)}</p>`);
+                paragraph = [];
+            };
+            const flushList = () => {
+                if (list.length) {
+                    const tag = listType === 'ol' ? 'ol' : 'ul';
+                    blocks.push(`<${tag}>${list.map(item => `<li>${formatInline(item)}</li>`).join('')}</${tag}>`);
+                    list = [];
+                    listType = '';
+                }
+            };
+
+            for (let index = 0; index < lines.length; index++) {
+                const line = lines[index].trim();
+                if (!line) { flushParagraph(); flushList(); continue; }
+                if (index + 1 < lines.length && line.includes('|') && isTableSeparator(lines[index + 1])) {
+                    flushParagraph(); flushList();
+                    const headers = splitTableRow(line);
+                    const rows = [];
+                    index += 2;
+                    while (index < lines.length && lines[index].includes('|') && lines[index].trim()) rows.push(splitTableRow(lines[index++]));
+                    index--;
+                    blocks.push(`<div class="table-wrap"><table><thead><tr>${headers.map(cell => `<th>${formatInline(cell)}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${headers.map((_, cellIndex) => `<td>${formatInline(row[cellIndex] || '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`);
+                    continue;
+                }
+                if (/^([-*_])\1{2,}\s*$/.test(line)) { flushParagraph(); flushList(); blocks.push('<hr>'); continue; }
+                const listMatch = line.match(/^\s*(?:[-*+]\s+|(\d+)\.\s+)(.*)$/);
+                if (listMatch) {
+                    flushParagraph();
+                    const nextType = listMatch[1] ? 'ol' : 'ul';
+                    if (listType && listType !== nextType) flushList();
+                    listType = nextType;
+                    list.push(listMatch[2]);
+                    continue;
+                }
+                if (line.startsWith('>')) {
+                    flushParagraph(); flushList();
+                    blocks.push(`<blockquote>${formatInline(line.replace(/^>\s?/, ''))}</blockquote>`);
+                    continue;
+                }
+                paragraph.push(line);
+            }
+            flushParagraph();
+            flushList();
+            return blocks.join('');
+        }
+
+        function formatInline(text) {
+            return escapeHtml(text)
+                .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>');
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+        }
+
+        function splitTableRow(line) {
+            return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim());
+        }
+
+        function isTableSeparator(line) {
+            const cells = splitTableRow(line);
+            return cells.length > 1 && cells.every(cell => /^:?-{1,}:?$/.test(cell));
+        }
+
+        function setStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.classList.toggle('error', isError);
+        }
+    </script>
+</body>
+</html>

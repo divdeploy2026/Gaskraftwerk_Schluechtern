@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="de" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kraftwerk & Rechenzentrum Schlüchtern - Infoportal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        schluechtern: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#006837', // Rathaus Grün
+                            900: '#064e2b',
+                            darkbg: '#0a120d',
+                            darkcard: '#121e16',
+                            darkborder: '#1f3326'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome für Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tile-card {
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, 0.08);
+        }
+        .tile-card::before {
+            content: "";
+            position: absolute;
+            top: 1rem;
+            bottom: 1rem;
+            left: 0;
+            width: 4px;
+            border-radius: 0 999px 999px 0;
+            background: linear-gradient(180deg, #16a34a, #006837);
+            opacity: 0.55;
+            transition: opacity 0.25s ease;
+        }
+        .chapter-colors .tile-card::before {
+            background: var(--chapter-color, linear-gradient(180deg, #16a34a, #006837));
+        }
+        .chapter-colors .section-heading {
+            border-color: var(--chapter-color) !important;
+        }
+        .chapter-colors .section-heading h2 {
+            color: var(--chapter-color) !important;
+        }
+        .chapter-colors .section-count {
+            background: color-mix(in srgb, var(--chapter-color) 13%, white);
+            color: var(--chapter-color);
+        }
+        .dark.chapter-colors .section-count {
+            background: color-mix(in srgb, var(--chapter-color) 24%, #121e16);
+            color: color-mix(in srgb, var(--chapter-color) 72%, white);
+        }
+        .dark .tile-card {
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+        }
+        .tile-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.14);
+        }
+        .tile-card:hover::before {
+            opacity: 1;
+        }
+        .imprint-summary::-webkit-details-marker {
+            display: none;
+        }
+        .bold-tag {
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
+        }
+        .bold-tag:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen flex-col bg-[#f8faf7] dark:bg-schluechtern-darkbg text-slate-800 dark:text-slate-200 transition-colors duration-300 font-sans">
+
+    <!-- Header / Navbar -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-schluechtern-darkcard/90 backdrop-blur-md border-b border-slate-200 dark:border-schluechtern-darkborder shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                
+                <!-- Logo & Titel -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-lg bg-schluechtern-800 text-white flex items-center justify-center font-bold text-xl shadow-md">
+                            <i class="fa-solid fa-city"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-schluechtern-800 dark:text-schluechtern-100 leading-tight">
+                                Bergwinkelstadt Schlüchtern
+                            </h1>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                Infoportal: Kraftwerk & Rechenzentrum
+                            </p>
+                            <a href="index_tree.html" class="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-schluechtern-700 hover:underline dark:text-schluechtern-600">
+                                <i class="fa-solid fa-diagram-project" aria-hidden="true"></i> Baumansicht
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Dark Mode Toggle Button (Mobile) -->
+                    <button id="theme-toggle-mobile" class="md:hidden p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-schluechtern-darkborder focus:outline-none">
+                        <i class="fa-solid fa-moon text-lg dark:hidden"></i>
+                        <i class="fa-solid fa-sun text-lg hidden dark:block text-amber-400"></i>
+                    </button>
+                </div>
+
+                <!-- Suchfeld & Controls -->
+                <div class="flex items-center space-x-3 flex-1 md:max-w-md">
+                    <div class="relative w-full">
+                        <input type="text" id="search-input" placeholder="Inhalte & Kacheln suchen..." 
+                            class="w-full pl-10 pr-10 py-2 rounded-xl border border-slate-300 dark:border-schluechtern-darkborder bg-white dark:bg-schluechtern-darkbg text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-schluechtern-800 focus:border-transparent outline-none transition-all shadow-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <button id="clear-search" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                    </div>
+
+                    <div id="demo-file-control" class="relative shrink-0">
+                        <div class="flex items-center">
+                            <button id="load-demo" type="button" class="inline-flex items-center gap-2 px-3 py-2 rounded-l-xl bg-schluechtern-800 hover:bg-schluechtern-700 text-white text-sm font-medium transition-colors shadow-sm" title="Demo-Inhalte aus content.md laden">
+                                <i class="fa-solid fa-file-arrow-down"></i>
+                                <span>Demo laden</span>
+                            </button>
+                            <button id="demo-file-menu-toggle" type="button" class="hidden px-2.5 py-2 rounded-r-xl border-l border-white/20 bg-schluechtern-800 hover:bg-schluechtern-700 text-white transition-colors shadow-sm" aria-label="Demo-Datei auswählen" aria-controls="demo-file-menu" aria-expanded="false">
+                                <i class="fa-solid fa-chevron-down text-xs"></i>
+                            </button>
+                        </div>
+                        <div id="demo-file-menu" class="hidden absolute right-0 top-full z-50 mt-2 min-w-52 overflow-hidden rounded-xl border border-slate-200 dark:border-schluechtern-darkborder bg-white dark:bg-schluechtern-darkcard shadow-xl">
+                            <p class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Verfügbare Demo-Dateien</p>
+                            <div id="demo-file-options" class="border-t border-slate-100 dark:border-schluechtern-darkborder p-1" role="group" aria-label="Verfügbare Demo-Dateien"></div>
+                        </div>
+                    </div>
+
+                    <!-- Dark Mode Toggle Button (Desktop) -->
+                    <button id="theme-toggle-desktop" class="hidden md:flex items-center justify-center w-10 h-10 rounded-xl border border-slate-300 dark:border-schluechtern-darkborder bg-white dark:bg-schluechtern-darkbg text-slate-600 dark:text-amber-400 hover:bg-slate-100 dark:hover:bg-schluechtern-darkborder transition-colors shadow-sm">
+                        <i class="fa-solid fa-moon dark:hidden"></i>
+                        <i class="fa-solid fa-sun hidden dark:block"></i>
+                    </button>
+                    <button id="chapter-colors-toggle" type="button" aria-pressed="true" class="inline-flex shrink-0 items-center gap-2 px-3 py-2 rounded-xl border border-slate-300 dark:border-schluechtern-darkborder bg-white dark:bg-schluechtern-darkbg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-schluechtern-darkborder transition-colors shadow-sm" title="Kapitel-Farben ein- oder ausschalten">
+                        <i class="fa-solid fa-palette" aria-hidden="true"></i>
+                        <span class="hidden sm:inline text-sm">Kapitel-Farben</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- Rückmeldung zum manuellen Laden der Demo-Daten -->
+    <div id="load-notice" role="status" aria-live="polite" class="hidden fixed top-24 right-4 z-50 max-w-sm rounded-xl border border-schluechtern-100 dark:border-schluechtern-darkborder bg-white dark:bg-schluechtern-darkcard p-4 shadow-xl">
+        <div class="flex items-start gap-3">
+            <i id="load-notice-icon" class="fa-solid fa-circle-check text-schluechtern-700 dark:text-schluechtern-600 mt-0.5"></i>
+            <p id="load-notice-text" class="text-sm text-slate-700 dark:text-slate-200"></p>
+            <button id="load-notice-close" type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-white" aria-label="Meldung schließen">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="w-full flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Filter Status / Aktivitätsanzeige -->
+        <div id="filter-status" class="hidden mb-6 p-3 rounded-lg bg-schluechtern-50 dark:bg-schluechtern-darkcard border border-schluechtern-100 dark:border-schluechtern-darkborder flex items-center justify-between">
+            <span class="text-sm text-schluechtern-800 dark:text-schluechtern-100">
+                <i class="fa-solid fa-filter mr-2"></i>Aktiver Filter: <strong id="active-filter-word"></strong>
+            </span>
+            <button onclick="clearSearch()" class="text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white underline">
+                Filter zurücksetzen
+            </button>
+        </div>
+
+        <!-- Container für Hauptkapitel & Kacheln -->
+        <div id="content-container" class="space-y-8">
+            <!-- Wird dynamisch befüllt -->
+        </div>
+
+        <!-- Keine Ergebnisse Meldung -->
+        <div id="no-results" class="hidden text-center py-16">
+            <i class="fa-solid fa-folder-open text-5xl text-slate-300 dark:text-slate-600 mb-4"></i>
+            <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300">Keine passenden Kacheln gefunden</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Versuchen Sie einen anderen Suchbegriff.</p>
+        </div>
+    </main>
+
+    <!-- Permanenter, ausklappbarer Impressum-Footer -->
+    <footer class="mt-auto w-full px-4 sm:px-6 lg:px-8 py-3">
+        <details class="group mx-auto max-w-3xl overflow-hidden rounded-xl border border-slate-200 dark:border-schluechtern-darkborder bg-white dark:bg-schluechtern-darkcard shadow-sm">
+            <summary class="imprint-summary flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-schluechtern-darkbg/60 transition-colors">
+                <span class="flex items-center gap-3">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-schluechtern-50 dark:bg-schluechtern-darkborder text-sm text-schluechtern-800 dark:text-schluechtern-600">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </span>
+                    <span>
+                        <span class="block text-sm font-semibold">Impressum</span>
+                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">Beta-Version · Angaben zum Anbieter</span>
+                    </span>
+                </span>
+                <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform group-open:rotate-180"></i>
+            </summary>
+            <div class="border-t border-slate-200 dark:border-schluechtern-darkborder px-3 py-4 sm:px-4 sm:py-5 space-y-4 text-slate-700 dark:text-slate-300">
+                <div class="rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/20 p-4">
+                    <p class="text-sm leading-relaxed"><strong>Beta-Hinweis:</strong> Diese Website ist eine Beta-Version einer kommenden Informationsseite und befindet sich derzeit im formellen und inhaltlichen Aufbau. Die folgenden Angaben sind eine Vorlage. Der Beta-Status befreit nicht von gesetzlichen Informationspflichten.</p>
+                </div>
+
+                <section aria-labelledby="imprint-provider-heading">
+                    <h2 id="imprint-provider-heading" class="mb-3 text-base font-bold text-slate-900 dark:text-white">Angaben zum Anbieter</h2>
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                        <div><dt class="font-semibold">Anbieter / Diensteanbieter</dt><dd class="mt-1 text-slate-500 dark:text-slate-400">[Vollständiger Vor- und Nachname oder Unternehmensname einschließlich Rechtsform]</dd></div>
+                        <div><dt class="font-semibold">Vertretungsberechtigte Person</dt><dd class="mt-1 text-slate-500 dark:text-slate-400">[Name, sofern für die Rechtsform erforderlich]</dd></div>
+                        <div><dt class="font-semibold">Ladungsfähige Anschrift</dt><dd class="mt-1 text-slate-500 dark:text-slate-400">[Straße, Hausnummer, PLZ, Ort und Staat; kein Postfach]</dd></div>
+                        <div><dt class="font-semibold">E-Mail-Adresse</dt><dd class="mt-1 text-slate-500 dark:text-slate-400">[Direkt erreichbare E-Mail-Adresse]</dd></div>
+                        <div><dt class="font-semibold">Weitere schnelle Kontaktmöglichkeit</dt><dd class="mt-1 text-slate-500 dark:text-slate-400">[Geeigneter Kontaktweg, z. B. Telefonnummer]</dd></div>
+                        <div><dt class="font-semibold">Register und Registernummer</dt><dd class="mt-1 text-slate-500 dark:text-slate-400">[Register, Registergericht, Nummer und EUID, sofern vorhanden; andernfalls nach Prüfung entfernen]</dd></div>
+                        <div><dt class="font-semibold">Kapital und ausstehende Einlagen</dt><dd class="mt-1 text-slate-500 dark:text-slate-400">[Bei Kapitalgesellschaften: Grund-/Stammkapital und ausstehende Einlagen, sofern einschlägig]</dd></div>
+                        <div><dt class="font-semibold">Abwicklungs- oder Liquidationsstatus</dt><dd class="mt-1 text-slate-500 dark:text-slate-400">[Falls zutreffend angeben; andernfalls nach Prüfung entfernen]</dd></div>
+                        <div><dt class="font-semibold">Umsatzsteuer-/Wirtschafts-Identifikationsnummer</dt><dd class="mt-1 text-slate-500 dark:text-slate-400">[Nummer, sofern vorhanden und einschlägig]</dd></div>
+                        <div><dt class="font-semibold">Aufsichtsbehörde</dt><dd class="mt-1 text-slate-500 dark:text-slate-400">[Name und Anschrift, falls die Tätigkeit einer behördlichen Zulassung unterliegt]</dd></div>
+                        <div class="sm:col-span-2"><dt class="font-semibold">Berufsrechtliche Angaben</dt><dd class="mt-1 text-slate-500 dark:text-slate-400">[Kammer, Berufsbezeichnung, Staat der Verleihung und Fundstelle der Berufsregeln, falls ein reglementierter Beruf betroffen ist]</dd></div>
+                    </dl>
+                </section>
+
+                <section aria-labelledby="imprint-editor-heading">
+                    <h2 id="imprint-editor-heading" class="mb-2 text-base font-bold text-slate-900 dark:text-white">Redaktionelle Verantwortung</h2>
+                    <p class="text-sm leading-relaxed">Sofern für journalistisch-redaktionelle Inhalte erforderlich (§ 18 Abs. 2 MStV): [Vor- und Nachname sowie ladungsfähige Anschrift der verantwortlichen Person].</p>
+                </section>
+
+                <section aria-labelledby="imprint-dispute-heading">
+                    <h2 id="imprint-dispute-heading" class="mb-2 text-base font-bold text-slate-900 dark:text-white">Verbraucherstreitbeilegung</h2>
+                    <p class="text-sm leading-relaxed">Sofern die Informationspflicht gilt: [Angeben, ob eine Verpflichtung oder Bereitschaft zur Teilnahme besteht. Bei Verpflichtung die zuständige Verbraucherschlichtungsstelle mit Name, Anschrift und Website nennen. Andernfalls nach Prüfung entfernen.]</p>
+                </section>
+
+                <p class="border-t border-slate-200 dark:border-schluechtern-darkborder pt-4 text-xs leading-relaxed text-slate-500 dark:text-slate-400">Vor einer Veröffentlichung müssen alle Platzhalter ausgefüllt oder nach rechtlicher Prüfung entfernt werden. Das Impressum muss leicht erkennbar, unmittelbar erreichbar und dauerhaft verfügbar sein. Diese Vorlage ersetzt keine Prüfung des konkreten Einzelfalls.</p>
+            </div>
+        </details>
+    </footer>
+
+    <!-- Popup Modal für vollen Kachel-Inhalt -->
+    <div id="modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white dark:bg-schluechtern-darkcard border border-slate-200 dark:border-schluechtern-darkborder rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden transform transition-all">
+            
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-slate-100 dark:border-schluechtern-darkborder flex items-start justify-between bg-slate-50/50 dark:bg-schluechtern-darkbg/50">
+                <div>
+                    <p id="modal-document-title" class="text-xs text-slate-500 dark:text-slate-400 mb-1"></p>
+                    <span id="modal-category" class="text-xs font-bold uppercase tracking-wider text-schluechtern-700 dark:text-schluechtern-600"></span>
+                    <p id="modal-parent" class="hidden text-xs text-slate-500 dark:text-slate-400 mt-2"></p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mt-2">Unterkategorie</p>
+                    <h3 id="modal-title" class="text-xl font-bold text-slate-900 dark:text-white mt-1"></h3>
+                </div>
+                <button id="modal-close" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-schluechtern-darkborder transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div id="modal-body" class="p-6 overflow-y-auto space-y-4 text-slate-700 dark:text-slate-300 leading-relaxed">
+                <div id="modal-info-wrapper" class="hidden rounded-xl border border-schluechtern-100 dark:border-schluechtern-darkborder bg-schluechtern-50/70 dark:bg-schluechtern-darkbg/50 p-4">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-schluechtern-700 dark:text-schluechtern-600 mb-1">Zusammenfassung</p>
+                    <p id="modal-info" class="text-sm font-medium leading-relaxed"></p>
+                </div>
+                <div id="modal-content" class="space-y-4"></div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-slate-100 dark:border-schluechtern-darkborder bg-slate-50/50 dark:bg-schluechtern-darkbg/50 grid grid-cols-3 items-center gap-2">
+                <button id="modal-prev-btn" type="button" class="justify-self-start inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-schluechtern-darkborder text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-schluechtern-darkborder disabled:opacity-40 disabled:cursor-not-allowed transition-colors" aria-label="Vorherige Kachel" title="Vorherige Kachel">
+                    <i class="fa-solid fa-chevron-left"></i><span class="hidden sm:inline">Zurück</span>
+                </button>
+                <button id="modal-close-btn" class="px-5 py-2 rounded-xl bg-schluechtern-800 hover:bg-schluechtern-700 text-white font-medium text-sm transition-colors shadow-sm">
+                    Schließen
+                </button>
+                <button id="modal-next-btn" type="button" class="justify-self-end inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-schluechtern-darkborder text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-schluechtern-darkborder disabled:opacity-40 disabled:cursor-not-allowed transition-colors" aria-label="Nächste Kachel" title="Nächste Kachel">
+                    <span class="hidden sm:inline">Weiter</span><i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script für Parsing, Suche, Filter und Modals -->
+    <script>
+        // Einstellbarer Unschärfe-Faktor für Fuzzysuche (0.0 = exakt, 1.0 = sehr unscharf)
+        const FUZZY_THRESHOLD = 0.3;
+        const DEMO_FILE_CANDIDATES = ['content.md', 'content_v1.md', 'content_v2.md'];
+        const CHAPTER_COLORS = ['#2563eb', '#c2410c', '#7e22ce', '#0f766e', '#be123c', '#4d7c0f', '#b45309', '#4338ca'];
+
+        let parsedSections = [];
+        let documentTitle = '';
+        let noticeTimeout;
+        let availableDemoFiles = [];
+        let demoFileCache = new Map();
+        let selectedDemoFile = 'content.md';
+        let modalTiles = [];
+        let modalTileIndex = -1;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initChapterColors();
+            setupEventListeners();
+            if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+                discoverDemoFiles();
+            }
+        });
+
+        // --- Theme Management (Dark / Light) ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+
+            const toggleBtns = [document.getElementById('theme-toggle-desktop'), document.getElementById('theme-toggle-mobile')];
+            toggleBtns.forEach(btn => {
+                if(btn) {
+                    btn.addEventListener('click', () => {
+                        document.documentElement.classList.toggle('dark');
+                        const isDark = document.documentElement.classList.contains('dark');
+                        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                    });
+                }
+            });
+        }
+
+        function initChapterColors() {
+            const enabled = localStorage.getItem('chapterColors') !== 'false';
+            document.documentElement.classList.toggle('chapter-colors', enabled);
+            const toggle = document.getElementById('chapter-colors-toggle');
+            toggle.setAttribute('aria-pressed', String(enabled));
+            toggle.title = `Kapitel-Farben ${enabled ? 'ausschalten' : 'einschalten'}`;
+            toggle.addEventListener('click', () => {
+                const nextEnabled = !document.documentElement.classList.contains('chapter-colors');
+                document.documentElement.classList.toggle('chapter-colors', nextEnabled);
+                localStorage.setItem('chapterColors', String(nextEnabled));
+                toggle.setAttribute('aria-pressed', String(nextEnabled));
+                toggle.title = `Kapitel-Farben ${nextEnabled ? 'ausschalten' : 'einschalten'}`;
+            });
+        }
+
+        // --- Markdown Laden & Parsen ---
+        async function loadMarkdown() {
+            const loadButton = document.getElementById('load-demo');
+            const fileToLoad = selectedDemoFile;
+            loadButton.disabled = true;
+            loadButton.classList.add('opacity-60', 'cursor-wait');
+
+            try {
+                let text = demoFileCache.get(fileToLoad);
+                if (text === undefined) {
+                    const response = await fetch(fileToLoad, { cache: 'no-store' });
+                    if (!response.ok) throw new Error(`${fileToLoad} konnte nicht geladen werden (HTTP ${response.status})`);
+                    text = await response.text();
+                    demoFileCache.set(fileToLoad, text);
+                }
+                parseMarkdown(text);
+                renderApp();
+
+                const chapters = parsedSections.length;
+                const subchapters = parsedSections.reduce((total, section) => total + section.tiles.length, 0);
+                const words = (text
+                    .replace(/^#{1,6}\s+/gm, '')
+                    .replace(/[\\*_`~]/g, '')
+                    .match(/[\p{L}\p{N}]+(?:[’'-][\p{L}\p{N}]+)*/gu) || []).length;
+                showLoadNotice(`${fileToLoad} geladen: ${chapters} Kapitel, ${subchapters} Unterkapitel und ${words} Wörter.`);
+            } catch (err) {
+                console.warn('Demo-Content konnte nicht geladen werden:', err);
+                showLoadNotice(`${fileToLoad} konnte nicht geladen werden. Bitte die Seite über einen lokalen Webserver öffnen.`, true);
+            } finally {
+                loadButton.disabled = false;
+                loadButton.classList.remove('opacity-60', 'cursor-wait');
+            }
+        }
+
+        async function discoverDemoFiles() {
+            const results = await Promise.all(DEMO_FILE_CANDIDATES.map(async (file) => {
+                try {
+                    const response = await fetch(file, { cache: 'no-store' });
+                    if (!response.ok) return null;
+                    const text = await response.text();
+                    demoFileCache.set(file, text);
+                    return file;
+                } catch {
+                    return null;
+                }
+            }));
+
+            availableDemoFiles = results.filter(Boolean);
+            if (availableDemoFiles.includes('content.md')) {
+                selectedDemoFile = 'content.md';
+            } else if (availableDemoFiles.length > 0) {
+                selectedDemoFile = availableDemoFiles[0];
+            }
+
+            renderDemoFileOptions();
+        }
+
+        function renderDemoFileOptions() {
+            const options = document.getElementById('demo-file-options');
+            const menuToggle = document.getElementById('demo-file-menu-toggle');
+            const loadButton = document.getElementById('load-demo');
+            options.replaceChildren();
+            menuToggle.classList.toggle('hidden', availableDemoFiles.length < 2);
+            loadButton.title = `Demo-Inhalte aus ${selectedDemoFile} laden`;
+            loadButton.setAttribute('aria-label', `Demo-Inhalte aus ${selectedDemoFile} laden`);
+
+            availableDemoFiles.forEach((file) => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.dataset.demoFile = file;
+                option.setAttribute('aria-pressed', String(file === selectedDemoFile));
+                option.className = 'flex w-full items-center justify-between gap-4 rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-schluechtern-50 dark:text-slate-200 dark:hover:bg-schluechtern-darkborder';
+
+                const filename = document.createElement('span');
+                filename.textContent = file;
+                option.appendChild(filename);
+
+                if (file === selectedDemoFile) {
+                    const selectedMark = document.createElement('i');
+                    selectedMark.className = 'fa-solid fa-check text-schluechtern-700 dark:text-schluechtern-600';
+                    selectedMark.setAttribute('aria-hidden', 'true');
+                    option.appendChild(selectedMark);
+                }
+
+                options.appendChild(option);
+            });
+        }
+
+        function closeDemoFileMenu() {
+            document.getElementById('demo-file-menu').classList.add('hidden');
+            document.getElementById('demo-file-menu-toggle').setAttribute('aria-expanded', 'false');
+        }
+
+        function showLoadNotice(message, isError = false) {
+            const notice = document.getElementById('load-notice');
+            const icon = document.getElementById('load-notice-icon');
+            document.getElementById('load-notice-text').textContent = message;
+            icon.className = isError
+                ? 'fa-solid fa-circle-exclamation text-red-600 mt-0.5'
+                : 'fa-solid fa-circle-check text-schluechtern-700 dark:text-schluechtern-600 mt-0.5';
+            notice.classList.remove('hidden');
+            clearTimeout(noticeTimeout);
+            noticeTimeout = setTimeout(() => notice.classList.add('hidden'), 6000);
+        }
+
+        function parseMarkdown(mdText) {
+            parsedSections = [];
+            documentTitle = '';
+            const lines = mdText.split('\n');
+            let currentSection = null;
+            let currentTile = null;
+            let promoteH3ToSection = false;
+            let headingPath = [];
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                const heading = trimmed.match(/^(#{1,6})\s*(.*?)\s*$/);
+                if (heading) {
+                    const level = heading[1].length;
+                    const title = heading[2].trim();
+                    if (level === 1 && title) {
+                        documentTitle = title;
+                    } else if (level === 2) {
+                        currentSection = title
+                            ? { title, tiles: [], color: CHAPTER_COLORS[parsedSections.length % CHAPTER_COLORS.length] }
+                            : null;
+                        if (currentSection) parsedSections.push(currentSection);
+                        promoteH3ToSection = !title;
+                        currentTile = null;
+                        headingPath = [];
+                    } else if (level === 3 && title && promoteH3ToSection) {
+                        currentSection = { title, tiles: [], color: CHAPTER_COLORS[parsedSections.length % CHAPTER_COLORS.length] };
+                        parsedSections.push(currentSection);
+                        currentTile = null;
+                        headingPath = [{ level, title }];
+                    } else if (currentSection && title) {
+                        const parentPath = headingPath.filter(item => item.level < level).map(item => item.title);
+                        currentTile = { title, info: '', level, parentPath, content: [] };
+                        currentSection.tiles.push(currentTile);
+                        headingPath = [...headingPath.filter(item => item.level < level), { level, title }];
+                    }
+                } else if (currentTile) {
+                    currentTile.content.push(trimmed);
+                }
+            });
+        }
+
+        // --- Rendering ---
+        function hasDescendantTile(tiles, tile) {
+            const tilePath = [...tile.parentPath, tile.title];
+            return tiles.some(candidate => candidate !== tile
+                && candidate.level > tile.level
+                && candidate.parentPath.length >= tilePath.length
+                && tilePath.every((title, index) => candidate.parentPath[index] === title));
+        }
+
+        function shouldRenderTile(tiles, tile) {
+            const hasOwnContent = tile.content.some(line => line.trim() !== '');
+            return hasOwnContent || !hasDescendantTile(tiles, tile);
+        }
+
+        function renderApp() {
+            const container = document.getElementById('content-container');
+            container.innerHTML = '';
+            modalTiles = [];
+
+            parsedSections.forEach((sec, sIdx) => {
+                if (sec.title.trim().toLowerCase() === 'impressum') return;
+                const visibleTiles = sec.tiles.filter(tile => shouldRenderTile(sec.tiles, tile));
+
+                const secEl = document.createElement('section');
+                secEl.className = 'section-block';
+                secEl.dataset.sectionTitle = sec.title;
+                secEl.style.setProperty('--chapter-color', sec.color || CHAPTER_COLORS[sIdx % CHAPTER_COLORS.length]);
+
+                secEl.innerHTML = `
+                    <div class="section-heading flex items-center space-x-3 mb-6 pb-2 border-b-2 border-schluechtern-800/20 dark:border-schluechtern-darkborder">
+                        <h2 class="text-2xl font-bold text-schluechtern-800 dark:text-schluechtern-100 tracking-tight">${escapeHtml(sec.title)}</h2>
+                        <span class="section-count text-xs px-2.5 py-0.5 rounded-full bg-schluechtern-100 dark:bg-schluechtern-darkborder text-schluechtern-800 dark:text-schluechtern-100 font-semibold">${visibleTiles.length}</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 tile-grid">
+                        ${visibleTiles.length ? '' : '<p class="text-sm text-slate-500 dark:text-slate-400">Für dieses Kapitel sind noch keine Unterkapitel oder Inhalte hinterlegt.</p>'}
+                    </div>
+                `;
+
+                const grid = secEl.querySelector('.tile-grid');
+
+                visibleTiles.forEach(tile => {
+                    const tileEl = document.createElement('div');
+                    tileEl.className = 'tile-card bg-white dark:bg-schluechtern-darkcard border border-slate-200 dark:border-schluechtern-darkborder rounded-xl p-4 sm:p-5 shadow-md hover:shadow-xl cursor-pointer flex flex-col group relative overflow-hidden';
+                    tileEl.dataset.title = tile.title;
+                    tileEl.dataset.info = tile.info;
+                    tileEl.dataset.fulltext = `${tile.parentPath.join(' ')} ${tile.content.join(' ')}`;
+
+                    const formattedInfo = formatBoldWords(tile.info);
+
+                    tileEl.innerHTML = `
+                        <div class="${tile.parentPath.length ? 'pl-3' : ''}">
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <div>
+                                    ${tile.parentPath.length ? `<p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1">${escapeHtml(tile.parentPath.join(' · '))}</p>` : ''}
+                                    <h3 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-schluechtern-800 dark:group-hover:text-schluechtern-600 transition-colors">${escapeHtml(tile.title)}</h3>
+                                </div>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-xs text-slate-300 dark:text-slate-600 group-hover:text-schluechtern-800 dark:group-hover:text-schluechtern-600 transition-colors mt-1"></i>
+                            </div>
+                            <p class="text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">${formattedInfo}</p>
+                        </div>
+                    `;
+
+                    const modalIndex = modalTiles.length;
+                    modalTiles.push({ category: sec.title, tile, element: tileEl });
+
+                    tileEl.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('bold-tag')) return;
+                        openModal(modalIndex);
+                    });
+
+                    grid.appendChild(tileEl);
+                });
+
+                container.appendChild(secEl);
+            });
+
+            bindBoldTagClicks();
+        }
+
+        // Fettgedruckte Wörter parsen und Klick-Filter anbinden
+        function formatBoldWords(text) {
+            return formatInlineMarkdown(text);
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/[&<>"']/g, character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[character]);
+        }
+
+        function formatInlineMarkdown(text) {
+            return escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong class="bold-tag text-schluechtern-800 dark:text-schluechtern-600">$1</strong>');
+        }
+
+        function parseMarkdownTableRow(line) {
+            let row = line.trim();
+            if (row.startsWith('|')) row = row.slice(1);
+            if (row.endsWith('|')) row = row.slice(0, -1);
+            return row.split('|').map(cell => cell.trim());
+        }
+
+        function isMarkdownTableSeparator(line) {
+            const cells = parseMarkdownTableRow(line);
+            return cells.length > 1 && cells.every(cell => /^:?-{1,}:?$/.test(cell));
+        }
+
+        function renderMarkdownContent(markdown) {
+            const lines = markdown.split(/\r?\n/);
+            const blocks = [];
+            let paragraphLines = [];
+
+            const flushParagraph = () => {
+                const paragraph = paragraphLines.join(' ').trim();
+                if (paragraph) blocks.push(`<p class="my-3">${formatInlineMarkdown(paragraph)}</p>`);
+                paragraphLines = [];
+            };
+
+            for (let index = 0; index < lines.length; index++) {
+                if (index + 1 < lines.length && lines[index].includes('|') && isMarkdownTableSeparator(lines[index + 1])) {
+                    flushParagraph();
+                    const headers = parseMarkdownTableRow(lines[index]);
+                    const alignments = parseMarkdownTableRow(lines[index + 1]).map(separator => {
+                        if (separator.startsWith(':') && separator.endsWith(':')) return 'center';
+                        if (separator.endsWith(':')) return 'right';
+                        return 'left';
+                    });
+                    const rows = [];
+                    index += 2;
+
+                    while (index < lines.length && lines[index].includes('|') && lines[index].trim() !== '') {
+                        rows.push(parseMarkdownTableRow(lines[index]));
+                        index++;
+                    }
+                    index--;
+
+                    const headerHtml = headers.map((header, cellIndex) => {
+                        const alignment = alignments[cellIndex] || 'left';
+                        return `<th scope="col" class="whitespace-nowrap bg-slate-100 px-4 py-3 font-semibold text-slate-800 dark:bg-schluechtern-darkborder dark:text-slate-100" style="text-align:${alignment}">${formatInlineMarkdown(header)}</th>`;
+                    }).join('');
+                    const rowsHtml = rows.map(row => {
+                        const cells = headers.map((_, cellIndex) => {
+                            const alignment = alignments[cellIndex] || 'left';
+                            return `<td class="border-t border-slate-200 px-4 py-3 dark:border-schluechtern-darkborder" style="text-align:${alignment}">${formatInlineMarkdown(row[cellIndex] || '')}</td>`;
+                        }).join('');
+                        return `<tr class="even:bg-slate-50 dark:even:bg-schluechtern-darkbg/40">${cells}</tr>`;
+                    }).join('');
+
+                    blocks.push(`<div class="my-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-schluechtern-darkborder"><table class="min-w-full border-collapse text-left text-sm"><thead><tr>${headerHtml}</tr></thead><tbody>${rowsHtml}</tbody></table></div>`);
+                } else if (lines[index].trim() === '') {
+                    flushParagraph();
+                } else {
+                    paragraphLines.push(lines[index].trim());
+                }
+            }
+
+            flushParagraph();
+            return blocks.join('');
+        }
+
+        function bindBoldTagClicks() {
+            document.querySelectorAll('.bold-tag').forEach(tag => {
+                tag.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const keyword = e.target.innerText.trim();
+                    filterByKeyword(keyword);
+                    closeModal();
+                });
+            });
+        }
+
+        function filterByKeyword(word) {
+            const searchInput = document.getElementById('search-input');
+            searchInput.value = word;
+            document.getElementById('active-filter-word').innerText = word;
+            document.getElementById('filter-status').classList.remove('hidden');
+            document.getElementById('clear-search').classList.remove('hidden');
+            performSearch(word);
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('search-input');
+            searchInput.value = '';
+            document.getElementById('filter-status').classList.add('hidden');
+            document.getElementById('clear-search').classList.add('hidden');
+            performSearch('');
+        }
+
+        // --- Suche & Unschärfe-Filterung ---
+        function performSearch(query) {
+            const q = query.toLowerCase().trim();
+            let totalVisible = 0;
+
+            document.querySelectorAll('.section-block').forEach(sec => {
+                let secVisible = 0;
+                sec.querySelectorAll('.tile-card').forEach(tile => {
+                    const title = tile.dataset.title.toLowerCase();
+                    const info = tile.dataset.info.toLowerCase();
+                    const text = tile.dataset.fulltext.toLowerCase();
+
+                    const matches = q === '' || fuzzyMatch(q, title) || fuzzyMatch(q, info) || fuzzyMatch(q, text);
+
+                    if (matches) {
+                        tile.classList.remove('hidden');
+                        secVisible++;
+                        totalVisible++;
+                    } else {
+                        tile.classList.add('hidden');
+                    }
+                });
+
+                if (secVisible > 0 || (q === '' && sec.querySelectorAll('.tile-card').length === 0)) {
+                    sec.classList.remove('hidden');
+                } else {
+                    sec.classList.add('hidden');
+                }
+            });
+
+            const noResults = document.getElementById('no-results');
+            if (totalVisible === 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+            }
+        }
+
+        // Levenshtein-basierter Unscharf-Abgleich
+        function fuzzyMatch(pattern, text) {
+            if (text.includes(pattern)) return true;
+            if (pattern.length < 3) return false;
+
+            const words = text.split(/\s+/);
+            for (let word of words) {
+                const dist = levenshteinDistance(pattern, word);
+                const maxLen = Math.max(pattern.length, word.length);
+                if ((dist / maxLen) <= FUZZY_THRESHOLD) return true;
+            }
+            return false;
+        }
+
+        function levenshteinDistance(a, b) {
+            const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+            for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+            for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+            for (let i = 1; i <= a.length; i++) {
+                for (let j = 1; j <= b.length; j++) {
+                    const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j - 1] + cost
+                    );
+                }
+            }
+            return matrix[a.length][b.length];
+        }
+
+        // --- Modal Logik ---
+        function openModal(index) {
+            modalTileIndex = index;
+            renderModalTile();
+
+            const modal = document.getElementById('modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function renderModalTile() {
+            const current = modalTiles[modalTileIndex];
+            if (!current) return;
+
+            const pageTitleElement = document.getElementById('modal-document-title');
+            pageTitleElement.innerText = documentTitle ? `Thema · ${documentTitle}` : '';
+            pageTitleElement.classList.toggle('hidden', !documentTitle);
+            document.getElementById('modal-category').innerText = `Hauptkategorie · ${current.category}`;
+            const parentElement = document.getElementById('modal-parent');
+            parentElement.innerText = current.tile.parentPath.length ? `Unterkapitel von · ${current.tile.parentPath.join(' · ')}` : '';
+            parentElement.classList.toggle('hidden', current.tile.parentPath.length === 0);
+            document.getElementById('modal-title').innerText = current.tile.title;
+
+            const infoWrapper = document.getElementById('modal-info-wrapper');
+            infoWrapper.classList.toggle('hidden', !current.tile.info);
+            document.getElementById('modal-info').innerHTML = formatBoldWords(current.tile.info || '');
+            
+            const formattedContent = renderMarkdownContent(current.tile.content.join('\n'));
+            document.getElementById('modal-content').innerHTML = formattedContent;
+            document.getElementById('modal-prev-btn').disabled = modalTileIndex === 0;
+            document.getElementById('modal-next-btn').disabled = modalTileIndex === modalTiles.length - 1;
+
+            bindBoldTagClicks();
+        }
+
+        function navigateModalTile(direction) {
+            const nextIndex = modalTileIndex + direction;
+            if (nextIndex < 0 || nextIndex >= modalTiles.length) return;
+            modalTileIndex = nextIndex;
+            renderModalTile();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function setupEventListeners() {
+            const searchInput = document.getElementById('search-input');
+            const clearBtn = document.getElementById('clear-search');
+            const menuToggle = document.getElementById('demo-file-menu-toggle');
+
+            document.getElementById('load-demo').addEventListener('click', loadMarkdown);
+            menuToggle.addEventListener('click', () => {
+                const menu = document.getElementById('demo-file-menu');
+                const opening = menu.classList.contains('hidden');
+                menu.classList.toggle('hidden', !opening);
+                menuToggle.setAttribute('aria-expanded', String(opening));
+            });
+            document.getElementById('demo-file-options').addEventListener('click', (event) => {
+                const option = event.target.closest('[data-demo-file]');
+                if (!option) return;
+
+                selectedDemoFile = option.dataset.demoFile;
+                renderDemoFileOptions();
+                closeDemoFileMenu();
+            });
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('#demo-file-control')) closeDemoFileMenu();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') closeDemoFileMenu();
+                if (document.getElementById('modal').classList.contains('hidden')) return;
+                if (event.key === 'ArrowLeft') navigateModalTile(-1);
+                if (event.key === 'ArrowRight') navigateModalTile(1);
+            });
+            document.getElementById('load-notice-close').addEventListener('click', () => {
+                document.getElementById('load-notice').classList.add('hidden');
+                clearTimeout(noticeTimeout);
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                const val = e.target.value;
+                if(val.trim() !== '') {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                    document.getElementById('filter-status').classList.add('hidden');
+                }
+                performSearch(val);
+            });
+
+            clearBtn.addEventListener('click', clearSearch);
+
+            document.getElementById('modal-close').addEventListener('click', closeModal);
+            document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+            document.getElementById('modal-prev-btn').addEventListener('click', () => navigateModalTile(-1));
+            document.getElementById('modal-next-btn').addEventListener('click', () => navigateModalTile(1));
+            document.getElementById('modal').addEventListener('click', (e) => {
+                if (e.target.id === 'modal') closeModal();
+            });
+        }
+    </script>
+</body>
+</html>
